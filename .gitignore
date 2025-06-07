@@ -67,3 +67,22 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# === CRA client build and dependencies ===
+client/node_modules/
+client/build/
+client/.env*
+client/.DS_Store
+
+# macOS file
+.DS_Store
+
+# IDE directories
+.vscode/
+.idea/
+
+# Firebase export data
+firebase-data/
+
+# TypeScript build info
+*.tsbuildinfo
