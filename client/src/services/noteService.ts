@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { firebaseDb as db } from '../firebase/config';
 import { Note } from '../store/noteStore';
+import { incrRead, incrWrite, incrDelete, incrBytesWritten } from '../utils/firebaseUsage';
 
 export const createNote = async (
   userId: string,
@@ -42,6 +43,8 @@ export const createNote = async (
     };
 
     const docRef = await addDoc(notesRef, noteData);
+    incrWrite();
+    incrBytesWritten(JSON.stringify(noteData).length);
     console.log('Note created successfully with ID:', docRef.id);
     return {
       id: docRef.id,
@@ -76,11 +79,15 @@ export const updateNote = async (
     ...data,
     updatedAt: serverTimestamp(),
   });
+  incrWrite();
+  incrBytesWritten(JSON.stringify(data).length);
 };
 
 export const deleteNote = async (noteId: string): Promise<void> => {
   const noteRef = doc(db, 'notes', noteId);
   await deleteDoc(noteRef);
+  incrWrite();
+  incrDelete();
 };
 
 export const getNotes = async (userId: string, folderId: string): Promise<Note[]> => {
@@ -91,6 +98,7 @@ export const getNotes = async (userId: string, folderId: string): Promise<Note[]
   );
 
   const querySnapshot = await getDocs(q);
+  incrRead(querySnapshot.docs.length);
 
   return querySnapshot.docs.map(doc => {
     const data = doc.data();
@@ -127,4 +135,12 @@ export const updateNotesPositions = async (
   });
 
   await batch.commit();
+  incrWrite(notes.length);
+  {
+    const totalBytes = notes.reduce(
+      (sum, n) => sum + JSON.stringify({ position: n.position, zIndex: n.zIndex, rotation: n.rotation, sizeCategory: n.sizeCategory }).length,
+      0
+    );
+    incrBytesWritten(totalBytes);
+  }
 }; 

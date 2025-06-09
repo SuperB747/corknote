@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { ArrowsRightLeftIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import useNoteStore from '../store/noteStore';
 import Note from './Note';
+import FirebaseUsageMonitor from './FirebaseUsageMonitor';
 
 // NOTE: adjust this to change maximum random rotation (degrees)
 const MAX_ROTATION = 5;
@@ -235,6 +236,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           ))}
         </div>
       </div>
+      {process.env.NODE_ENV === 'development' && <FirebaseUsageMonitor />}
     </div>
   );
 };

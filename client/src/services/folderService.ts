@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { firebaseDb as db } from '../firebase/config';
 import { Folder } from '../store/noteStore';
+import { incrRead, incrWrite, incrDelete, incrBytesWritten } from '../utils/firebaseUsage';
 
 export const createFolder = async (userId: string, name: string): Promise<Folder> => {
   console.log(`Creating folder for userId: ${userId} with name: ${name}`);
@@ -25,6 +26,8 @@ export const createFolder = async (userId: string, name: string): Promise<Folder
       order: serverTimestamp(),
     };
     const docRef = await addDoc(foldersRef, folderData);
+    incrWrite();
+    incrBytesWritten(JSON.stringify(folderData).length);
     console.log('Folder created successfully with ID:', docRef.id);
     return {
       id: docRef.id,
@@ -42,17 +45,23 @@ export const createFolder = async (userId: string, name: string): Promise<Folder
 export const updateFolder = async (folderId: string, name: string): Promise<void> => {
   const folderRef = doc(db, 'folders', folderId);
   await updateDoc(folderRef, { name });
+  incrWrite();
+  incrBytesWritten(JSON.stringify({ name }).length);
 };
 
 export const deleteFolder = async (folderId: string): Promise<void> => {
   const folderRef = doc(db, 'folders', folderId);
   await deleteDoc(folderRef);
+  incrWrite();
+  incrDelete();
 };
 
 export const getFolders = async (userId: string): Promise<Folder[]> => {
   const foldersRef = collection(db, 'folders');
   const q = query(foldersRef, where('userId', '==', userId));
   const querySnapshot = await getDocs(q);
+  
+  incrRead(querySnapshot.docs.length);
   
   const folders = querySnapshot.docs.map(doc => {
     const data = doc.data();
@@ -86,6 +95,8 @@ export const updateFolderSettings = async (
 ): Promise<void> => {
   const folderRef = doc(db, 'folders', folderId);
   await updateDoc(folderRef, settings);
+  incrWrite();
+  incrBytesWritten(JSON.stringify(settings).length);
 };
 
 /** Batch update folder order */
@@ -98,4 +109,9 @@ export const updateFoldersOrder = async (
     batch.update(folderRef, { order });
   });
   await batch.commit();
+  incrWrite(folderOrders.length);
+  {
+    const totalBytes = folderOrders.reduce((sum, fo) => sum + JSON.stringify({ order: fo.order }).length, 0);
+    incrBytesWritten(totalBytes);
+  }
 }; 
