@@ -59,6 +59,8 @@ interface NoteStore {
 const useNoteStore = create<NoteStore>((set, get) => {
   // In-memory cache: folderId -> notes array
   const notesCache: Record<string, Note[]> = {};
+  // Track which notes have unsaved layout changes
+  const changedNoteIds = new Set<string>();
   return {
     notes: [],
     folders: [],
@@ -225,6 +227,8 @@ const useNoteStore = create<NoteStore>((set, get) => {
     },
 
     updateNotePosition: (noteId: string, position: { x: number; y: number }) => {
+      // mark this note as changed
+      changedNoteIds.add(noteId);
       set(state => {
         const maxZIndex = Math.max(...state.notes.map(note => note.zIndex), 0);
         const newZIndex = maxZIndex + 1;
@@ -242,23 +246,43 @@ const useNoteStore = create<NoteStore>((set, get) => {
       });
     },
 
-    updateNoteRotation: (noteId: string, rotation: number) => set(state => ({
-      notes: state.notes.map(note => note.id === noteId ? { ...note, rotation } : note),
-      unsavedChanges: true
-    })),
+    updateNoteRotation: (noteId: string, rotation: number) => {
+      // mark this note as changed
+      changedNoteIds.add(noteId);
+      set(state => ({
+        notes: state.notes.map(note => note.id === noteId ? { ...note, rotation } : note),
+        unsavedChanges: true
+      }));
+    },
 
-    updateNoteSize: (noteId: string, sizeCategory: string) => set(state => ({
-      notes: state.notes.map(note => note.id === noteId ? { ...note, sizeCategory } : note),
-      unsavedChanges: true
-    })),
+    updateNoteSize: (noteId: string, sizeCategory: string) => {
+      // mark this note as changed
+      changedNoteIds.add(noteId);
+      set(state => ({
+        notes: state.notes.map(note => note.id === noteId ? { ...note, sizeCategory } : note),
+        unsavedChanges: true
+      }));
+    },
 
     saveNotePositions: async () => {
-      const { notes } = get();
+      const { notes, selectedFolderId } = get();
+      // only save notes that have been changed
+      const changedNotes = notes.filter(note => changedNoteIds.has(note.id));
+      if (changedNotes.length === 0) {
+        // nothing to save
+        return;
+      }
       try {
         set({ isLoading: true, error: null });
         await noteService.updateNotesPositions(
-          notes.map(note => ({ id: note.id, position: note.position, zIndex: note.zIndex, rotation: note.rotation, sizeCategory: note.sizeCategory }))
+          changedNotes.map(note => ({ id: note.id, position: note.position, zIndex: note.zIndex, rotation: note.rotation, sizeCategory: note.sizeCategory }))
         );
+        // update cache for current folder so loadNotes returns updated positions
+        if (selectedFolderId) {
+          notesCache[selectedFolderId] = notes;
+        }
+        // clear change tracking and reset flag
+        changedNoteIds.clear();
         set({ unsavedChanges: false, isLoading: false });
       } catch (error) {
         set({ error: 'Failed to save note positions', isLoading: false });

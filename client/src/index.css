@@ -39,4 +39,11 @@ body {
 }
 .scrollbar-container:hover::-webkit-scrollbar-thumb {
   background-color: rgba(0,0,0,0.2);
+}
+
+/* Quill list indent override: small single-level indent */
+.ql-editor ul,
+.ql-editor ol {
+  margin-left: 0 !important;
+  padding-left: 0.75rem !important;
 } 

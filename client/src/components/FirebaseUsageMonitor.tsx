@@ -49,8 +49,8 @@ const FirebaseUsageMonitor: React.FC = () => {
   };
 
   return (
-    <div className="no-drag fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white/80 backdrop-blur-md rounded-md px-4 py-2 shadow-md flex items-center space-x-4 z-50">
-      <span className="text-sm font-mono">Stored: {storageSize}B</span>
+    <div className="no-drag absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/80 backdrop-blur-md rounded-md px-4 py-2 shadow-md flex items-center space-x-4 z-50">
+      <span className="text-sm font-mono">Stored: {(storageSize / (1024 * 1024)).toFixed(2)} MB</span>
       <span className="text-sm font-mono">Deletes: {deletes}</span>
       <span className="text-sm font-mono">Reads: {reads}</span>
       <span className="text-sm font-mono">Writes: {writes}</span>

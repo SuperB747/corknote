@@ -11,6 +11,7 @@ const Sidebar: React.FC = () => {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
+  const [folderToDelete, setFolderToDelete] = useState<{id: string; name: string} | null>(null);
 
   const handleCreateFolder = async () => {
     if (!currentUser || !folderName.trim()) return;
@@ -28,11 +29,17 @@ const Sidebar: React.FC = () => {
     setFolderName('');
   };
 
-  const handleDeleteFolder = async (folderId: string) => {
-    if (window.confirm('Are you sure you want to delete this folder and all its notes?')) {
-      await deleteFolder(folderId);
-    }
+  const handleDeleteFolder = (folder: { id: string; name: string }) => {
+    setFolderToDelete(folder);
   };
+
+  const confirmDeleteFolder = async () => {
+    if (!folderToDelete) return;
+    await deleteFolder(folderToDelete.id);
+    setFolderToDelete(null);
+  };
+
+  const cancelDeleteFolder = () => setFolderToDelete(null);
 
   const startEditing = (folder: { id: string; name: string }) => {
     setIsEditingFolder(folder.id);
@@ -88,9 +95,9 @@ const Sidebar: React.FC = () => {
         </div>
       )}
 
-      <Reorder.Group axis="y" values={folders} onReorder={reorderFolders} className="space-y-2 flex-1 overflow-y-auto overscroll-contain scrollbar-container">
+      <Reorder.Group initial={false} axis="y" values={folders} onReorder={reorderFolders} className="space-y-2 flex-1 overflow-y-auto overscroll-contain scrollbar-container">
         {folders.map((folder) => (
-          <Reorder.Item
+          <Reorder.Item initial={false}
             key={folder.id}
             value={folder}
             onClick={() => setSelectedFolder(folder.id)}
@@ -127,7 +134,7 @@ const Sidebar: React.FC = () => {
                     <PencilIcon className="w-4 h-4 text-gray-500" />
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder); }}
                     className="p-1 hover:bg-gray-200 rounded-full"
                   >
                     <TrashIcon className="w-4 h-4 text-gray-500" />
@@ -138,6 +145,30 @@ const Sidebar: React.FC = () => {
           </Reorder.Item>
         ))}
       </Reorder.Group>
+
+      {folderToDelete && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-xl border border-gray-200">
+            <p className="text-center text-gray-900 font-semibold text-lg mb-4">
+              {`${folderToDelete.name} 보드를 정말 삭제하시겠습니까? (모든 노트도 삭제됩니다)`}
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={cancelDeleteFolder}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded"
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmDeleteFolder}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
