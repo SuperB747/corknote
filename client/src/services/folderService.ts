@@ -7,7 +7,8 @@ import {
   query, 
   where, 
   getDocs,
-  serverTimestamp 
+  serverTimestamp,
+  writeBatch
 } from 'firebase/firestore';
 import { firebaseDb as db } from '../firebase/config';
 import { Folder } from '../store/noteStore';
@@ -21,6 +22,7 @@ export const createFolder = async (userId: string, name: string): Promise<Folder
       userId,
       ocdEnabled: false,
       createdAt: serverTimestamp(),
+      order: serverTimestamp(),
     };
     const docRef = await addDoc(foldersRef, folderData);
     console.log('Folder created successfully with ID:', docRef.id);
@@ -29,6 +31,7 @@ export const createFolder = async (userId: string, name: string): Promise<Folder
       name,
       createdAt: new Date(),
       ocdEnabled: false,
+      order: Date.now(),
     };
   } catch (error) {
     console.error("Error creating folder in Firestore:", error);
@@ -51,15 +54,29 @@ export const getFolders = async (userId: string): Promise<Folder[]> => {
   const q = query(foldersRef, where('userId', '==', userId));
   const querySnapshot = await getDocs(q);
   
-  return querySnapshot.docs.map(doc => {
+  const folders = querySnapshot.docs.map(doc => {
     const data = doc.data();
+    // Determine order value: Firestore Timestamp or numeric
+    let orderValue: number;
+    const rawOrder = data.order;
+    if (rawOrder && typeof (rawOrder as any).toMillis === 'function') {
+      orderValue = (rawOrder as any).toMillis();
+    } else if (typeof rawOrder === 'number') {
+      orderValue = rawOrder;
+    } else {
+      orderValue = data.createdAt.toDate().getTime();
+    }
     return {
       id: doc.id,
       name: data.name,
       createdAt: data.createdAt.toDate(),
       ocdEnabled: data.ocdEnabled ?? false,
+      order: orderValue,
     };
   });
+  // Sort folders locally by order field
+  folders.sort((a, b) => a.order - b.order);
+  return folders;
 };
 
 /** Update folder settings such as OCD toggle */
@@ -69,4 +86,16 @@ export const updateFolderSettings = async (
 ): Promise<void> => {
   const folderRef = doc(db, 'folders', folderId);
   await updateDoc(folderRef, settings);
+};
+
+/** Batch update folder order */
+export const updateFoldersOrder = async (
+  folderOrders: { id: string; order: number }[]
+): Promise<void> => {
+  const batch = writeBatch(db);
+  folderOrders.forEach(({ id, order }) => {
+    const folderRef = doc(db, 'folders', id);
+    batch.update(folderRef, { order });
+  });
+  await batch.commit();
 }; 

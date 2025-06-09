@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, updateProfile, updateEmail, updatePassword, signOut } from 'firebase/auth';
 import { firebaseAuth } from '../firebase/config';
-import { Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { Cog6ToothIcon, ArrowRightOnRectangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface UserProfileProps {
   user: User;
@@ -50,28 +50,38 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-700 flex-1">
           {user.displayName || user.email}
         </span>
-        <button
-          onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-          className="p-1 hover:bg-gray-100 rounded-full"
-        >
-          <Cog6ToothIcon className="w-5 h-5 text-gray-600" />
-        </button>
-        <button
-          onClick={handleLogout}
-          className="p-1 hover:bg-gray-100 rounded-full"
-          title="로그아웃"
-        >
-          <ArrowRightOnRectangleIcon className="w-5 h-5 text-gray-600" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+            className="p-1 hover:bg-gray-100 rounded-full"
+            title="설정"
+          >
+            <Cog6ToothIcon className="w-5 h-5 text-gray-600" />
+          </button>
+          <button
+            onClick={handleLogout}
+            className="p-1 hover:bg-gray-100 rounded-full"
+            title="로그아웃"
+          >
+            <ArrowRightOnRectangleIcon className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
       </div>
 
       {isSettingsOpen && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-50">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-50 relative">
           <h3 className="text-lg font-semibold mb-4">사용자 설정</h3>
+          <button
+            onClick={() => setIsSettingsOpen(false)}
+            className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full"
+            title="닫기"
+          >
+            <XMarkIcon className="w-5 h-5 text-gray-600" />
+          </button>
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700">이름</label>

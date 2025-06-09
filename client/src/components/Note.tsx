@@ -3,6 +3,7 @@ import { motion, PanInfo } from 'framer-motion';
 import { Note } from '../store/noteStore';
 import useNoteStore from '../store/noteStore';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon } from '@heroicons/react/24/solid';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -49,6 +50,12 @@ const quillFormats = [
   'link'
 ];
 
+// Maximum random tilt for notes on save (degrees)
+const MAX_ROTATION = 5;
+
+// possible pin colors
+const pinColors = ['#e53e3e', '#d69e2e', '#38a169', '#3182ce', '#805ad5', '#d53f8c'];
+
 interface NoteProps {
   note: Note;
   rotation?: number;  // rotation angle in degrees
@@ -58,7 +65,7 @@ interface NoteProps {
 }
 
 const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
-  const { updateNote, deleteNote, updateNotePosition, updateNoteSize } = useNoteStore();
+  const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
@@ -71,6 +78,12 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const prevSizeRef = useRef<'S'|'M'|'L'>(defaultSize);
   // delete confirmation modal
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // pin state: color and key to re-trigger animation
+  const [pinColor, setPinColor] = useState(pinColors[Math.floor(Math.random() * pinColors.length)]);
+  const [pinKey, setPinKey] = useState(0);
+  // Ref & state for detecting overflow in view mode
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
 
   // when entering edit mode, reset selectedSize to current note size
   useEffect(() => {
@@ -105,13 +118,24 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     }
   }, [initialEditing]);
 
+  useEffect(() => {
+    const el = contentRef.current;
+    if (el) {
+      setHasOverflow(el.scrollHeight > el.clientHeight);
+    }
+  }, [note.content]);
+
   const handleSave = () => {
     // apply selected note size
     updateNoteSize(note.id, selectedSize);
     // persist title/content/color
     updateNote(note.id, { title, content, color });
-    // if this was a newly created note, notify parent
-    if (initialEditing && onNewNoteHandled) onNewNoteHandled();
+    // if this was a newly created note, assign random rotation and notify parent
+    if (initialEditing) {
+      const angle = (Math.random() * 2 - 1) * MAX_ROTATION;
+      updateNoteRotation(note.id, angle);
+      onNewNoteHandled?.();
+    }
     setIsEditing(false);
   };
 
@@ -122,6 +146,9 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false);
     onDragEnd?.(event, info);
+    // re-pin: new color and re-trigger animation
+    setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
+    setPinKey(k => k + 1);
   };
 
   return (
@@ -148,14 +175,18 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       whileHover={{ scale: 1.02 }}
     >
-      {/* Pin animation */}
-      <motion.div
-        className="absolute top-0 left-1/2 w-3 h-3 bg-red-600 rounded-full shadow-md"
-        style={{ transform: 'translate(-50%, -100%)' }}
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, type: 'spring', stiffness: 500, damping: 25 }}
-      />
+      {/* Pin animation: hide while dragging, show on drop with random color */}
+      {!isDragging && (
+        <motion.div
+          key={pinKey}
+          className="absolute top-0 left-1/2 -translate-x-1/2"
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1, type: 'spring', stiffness: 400, damping: 20 }}
+        >
+          <MapPinIcon className="w-6 h-6" style={{ color: pinColor }} />
+        </motion.div>
+      )}
 
       {/* Content */}
       {isEditing ? (
@@ -181,7 +212,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           </div>
           {/* Editor container: content scrolls, controls fixed at bottom */}
           <div className="flex flex-col h-full">
-            <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+            {/* Note editing inner padding: adjust the 'p-2' value as needed */}
+            <div className="flex-1 p-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
               <input
                 className="w-full bg-transparent border-b border-gray-400 focus:outline-none"
                 value={title}
@@ -241,8 +273,9 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           </div>
         </>
       ) : (
-        <div className="p-4">
-          <div className="flex justify-between items-start">
+        <div className="p-2 flex flex-col h-full relative">
+          {/* Header: title and action buttons */}
+          <div className="mt-3 flex justify-between items-start shrink-0">
             <h3 className="font-medium text-lg truncate">{note.title}</h3>
             <div className="flex gap-2">
               <button onClick={() => setIsEditing(true)} className="p-1 hover:bg-black/10 rounded">
@@ -253,8 +286,18 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               </button>
             </div>
           </div>
-          {/* Render rich text (including lists) using Quill styles */}
-          <div className="text-sm mt-2">
+          {/* Content area: truncated until hover, scroll on hover */}
+          <div
+            ref={contentRef}
+            className={`mt-2 flex-1 relative text-sm scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 ${hasOverflow ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'}`}
+            onWheelCapture={e => {
+              // Only intercept vertical scroll when content is overflowed, so note content scrolls
+              if (hasOverflow && e.deltaY !== 0) {
+                e.stopPropagation();
+              }
+              // Horizontal scroll events will propagate to enable board panning
+            }}
+          >
             <div className="ql-snow">
               <div
                 className="ql-editor p-0 [&_ul]:!pl-0 [&_ol]:!pl-0 [&_ul]:!-ml-6 [&_ol]:!-ml-6 [&_ul]:!mt-0 [&_ol]:!mt-0 [&_ul]:!mb-0 [&_ol]:!mb-0 [&_ul]:list-outside [&_ol]:list-outside"
@@ -262,6 +305,12 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               />
             </div>
           </div>
+          {/* Ellipsis indicator for truncated content */}
+          {hasOverflow && (
+            <div className="absolute bottom-1 right-2 text-gray-400 pointer-events-none">
+              ...
+            </div>
+          )}
         </div>
       )}
       {/* delete confirm modal */}

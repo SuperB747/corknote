@@ -191,7 +191,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           <span>노트 섞기</span>
         </button>
         <span className="text-gray-400">|</span>
-        <button onClick={saveLayout} disabled={saving} className="flex items-center gap-1 text-sm min-w-[8ch]">
+        <button onClick={saveLayout} disabled={saving} className="flex items-center justify-center gap-1 text-sm min-w-[7rem]">
           <ArrowDownTrayIcon className="w-5 h-5" />
           <span>{saving ? '저장중' : saved ? '저장완료' : '레이아웃 저장'}</span>
         </button>

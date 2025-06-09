@@ -21,6 +21,7 @@ export interface Folder {
   name: string;
   createdAt: Date;
   ocdEnabled: boolean;
+  order: number;
 }
 
 interface NoteStore {
@@ -38,6 +39,7 @@ interface NoteStore {
   deleteFolder: (folderId: string) => Promise<void>;
   setSelectedFolder: (folderId: string) => void;
   updateFolderSettings: (folderId: string, ocdEnabled: boolean) => Promise<void>;
+  reorderFolders: (newOrder: Folder[]) => void;
 
   // Note actions
   loadNotes: (userId: string, folderId: string) => Promise<void>;
@@ -132,6 +134,15 @@ const useNoteStore = create<NoteStore>((set, get) => ({
     }
   },
 
+  // Reorder folder list locally
+  reorderFolders: (newOrder: Folder[]) => {
+    set({ folders: newOrder });
+    // Persist the new order to backend (batch update)
+    folderService.updateFoldersOrder(
+      newOrder.map((folder, index) => ({ id: folder.id, order: index }))
+    );
+  },
+
   // Note actions
   loadNotes: async (userId: string, folderId: string) => {
     try {
@@ -201,12 +212,18 @@ const useNoteStore = create<NoteStore>((set, get) => ({
   updateNotePosition: (noteId: string, position: { x: number; y: number }) => {
     set(state => {
       const maxZIndex = Math.max(...state.notes.map(note => note.zIndex), 0);
-      return {
-        notes: state.notes.map(note =>
-          note.id === noteId ? { ...note, position, zIndex: maxZIndex + 1 } : note
-        ),
-        unsavedChanges: true
-      };
+      const newZIndex = maxZIndex + 1;
+      // assign new z-index to moved note
+      const updatedNotes = state.notes.map(note =>
+        note.id === noteId ? { ...note, position, zIndex: newZIndex } : note
+      );
+      // renormalize all z-indices if threshold reached
+      if (newZIndex >= 100) {
+        const sorted = [...updatedNotes].sort((a, b) => a.zIndex - b.zIndex);
+        const renormalized = sorted.map((note, idx) => ({ ...note, zIndex: idx + 1 }));
+        return { notes: renormalized, unsavedChanges: true };
+      }
+      return { notes: updatedNotes, unsavedChanges: true };
     });
   },
 

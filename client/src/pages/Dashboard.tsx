@@ -7,13 +7,32 @@ import { PlusCircleIcon } from '@heroicons/react/24/outline';
 const Dashboard: React.FC = () => {
   const { currentUser } = useAuth();
   const {
+    folders,
     selectedFolderId,
+    setSelectedFolder,
     loadFolders,
     loadNotes,
     createNote,
     error
   } = useNoteStore();
   const [newNoteId, setNewNoteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (currentUser && folders.length > 0 && !selectedFolderId) {
+      const last = localStorage.getItem('lastFolderId');
+      if (last && folders.some(f => f.id === last)) {
+        setSelectedFolder(last);
+      } else {
+        setSelectedFolder(folders[0].id);
+      }
+    }
+  }, [currentUser, folders, selectedFolderId, setSelectedFolder]);
+
+  useEffect(() => {
+    if (selectedFolderId) {
+      localStorage.setItem('lastFolderId', selectedFolderId);
+    }
+  }, [selectedFolderId]);
 
   useEffect(() => {
     if (currentUser) {
