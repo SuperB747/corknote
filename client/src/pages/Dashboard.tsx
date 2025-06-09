@@ -13,6 +13,7 @@ const Dashboard: React.FC = () => {
     loadFolders,
     loadNotes,
     createNote,
+    createFolder,
     error,
     isLoading
   } = useNoteStore();
@@ -49,8 +50,28 @@ const Dashboard: React.FC = () => {
 
   if (!isLoading && folders.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-gray-600">No boards found. Please create a new board to get started.</p>
+      <div className="h-full relative overflow-hidden">
+        {/* Corkboard background */}
+        <div className="absolute inset-0 bg-cork bg-repeat"></div>
+        <div className="absolute inset-0 bg-cork-overlay"></div>
+        {/* Floating message card */}
+        <div className="relative z-10 flex flex-col items-center justify-center h-full px-4">
+          <div className="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-lg max-w-sm text-center">
+            <h2 className="text-2xl font-bold mb-4">Welcome to Corknote!</h2>
+            <p className="text-gray-700 mb-6">You don't have any boards yet.<br/>Create your first board to get started.</p>
+            <button
+              onClick={async () => {
+                const name = window.prompt('Enter board name');
+                if (name && currentUser) {
+                  await createFolder(currentUser.uid, name.trim());
+                }
+              }}
+              className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none"
+            >
+              Create Board
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

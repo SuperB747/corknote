@@ -72,6 +72,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [color, setColor] = useState(note.color || '#fff7c0');
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [disableHover, setDisableHover] = useState(false);
   // S, M, L size selection
   const defaultSize = note.sizeCategory as 'S'|'M'|'L';
   const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(defaultSize);
@@ -158,9 +159,14 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       initial={false}
       className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
       onWheelCapture={(e) => { if (isEditing && e.deltaY !== 0) e.stopPropagation(); }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      whileHover={{ scale: isEditing ? 1 : 1.15 }}
+      onHoverStart={() => {
+        if (!disableHover && !isEditing) setIsHovered(true);
+      }}
+      onHoverEnd={() => {
+        setIsHovered(false);
+        if (disableHover) setDisableHover(false);
+      }}
+      whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
       style={{
         x: note.position.x,
         y: note.position.y,
@@ -175,11 +181,16 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       dragMomentum={false}
       onDragStart={() => {
         setIsDragging(true);
+        setDisableHover(true);
+        setIsHovered(false);
         updateNotePosition(note.id, note.position);
       }}
       onDragEnd={(e, info) => {
         setIsDragging(false);
         onDragEnd?.(e, info);
+        setIsEditing(true);
+        setDisableHover(true);
+        setIsHovered(false);
       }}
     >
       {/* Pin animation: hide while dragging, show on drop with random color */}
