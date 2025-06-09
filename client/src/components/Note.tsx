@@ -158,7 +158,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       transition={{ default: { duration: 0 } }}
       initial={false}
       className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
-      onWheelCapture={(e) => { if (isEditing && e.deltaY !== 0) e.stopPropagation(); }}
+      onWheelCapture={(e) => { e.stopPropagation(); }}
       onHoverStart={() => {
         if (!disableHover && !isEditing) setIsHovered(true);
       }}
