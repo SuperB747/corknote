@@ -88,11 +88,12 @@ const Sidebar: React.FC = () => {
         </div>
       )}
 
-      <Reorder.Group axis="y" values={folders} onReorder={reorderFolders} className="space-y-2 flex-1 overflow-y-auto overscroll-contain">
+      <Reorder.Group axis="y" values={folders} onReorder={reorderFolders} className="space-y-2 flex-1 overflow-y-auto overscroll-contain scrollbar-container">
         {folders.map((folder) => (
           <Reorder.Item
             key={folder.id}
             value={folder}
+            onClick={() => setSelectedFolder(folder.id)}
             className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
               selectedFolderId === folder.id
                 ? 'bg-blue-200 border-blue-400'
@@ -120,13 +121,13 @@ const Sidebar: React.FC = () => {
                 </button>
                 <div className="flex pr-2">
                   <button
-                    onClick={() => startEditing(folder)}
+                    onClick={(e) => { e.stopPropagation(); startEditing(folder); }}
                     className="p-1 hover:bg-gray-200 rounded-full"
                   >
                     <PencilIcon className="w-4 h-4 text-gray-500" />
                   </button>
                   <button
-                    onClick={() => handleDeleteFolder(folder.id)}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }}
                     className="p-1 hover:bg-gray-200 rounded-full"
                   >
                     <TrashIcon className="w-4 h-4 text-gray-500" />

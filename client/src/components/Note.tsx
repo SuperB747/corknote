@@ -213,7 +213,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           {/* Editor container: content scrolls, controls fixed at bottom */}
           <div className="flex flex-col h-full">
             {/* Note editing inner padding: adjust the 'p-2' value as needed */}
-            <div className="flex-1 p-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+            <div className="flex-1 p-1 overflow-y-auto scrollbar-container">
               <input
                 className="w-full bg-transparent border-b border-gray-400 focus:outline-none"
                 value={title}
@@ -289,7 +289,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           {/* Content area: truncated until hover, scroll on hover */}
           <div
             ref={contentRef}
-            className={`mt-2 flex-1 relative text-sm scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 ${hasOverflow ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'}`}
+            className={`mt-2 flex-1 relative text-sm scrollbar-container ${hasOverflow ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'}`}
             onWheelCapture={e => {
               // Only intercept vertical scroll when content is overflowed, so note content scrolls
               if (hasOverflow && e.deltaY !== 0) {

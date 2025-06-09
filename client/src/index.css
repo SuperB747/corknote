@@ -13,4 +13,30 @@ body {
 
 .bg-cork {
   background-color: theme('colors.cork.DEFAULT');
+}
+
+/* Custom subtle scrollbars: always reserve gutter, thumb only visible on hover */
+.scrollbar-container {
+  /* Firefox: reserve thin gutter, hide thumb and track by default */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.scrollbar-container:hover {
+  /* Firefox: show thumb on hover */
+  scrollbar-color: rgba(0,0,0,0.2) transparent;
+}
+/* WebKit: reserve gutter width */
+.scrollbar-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-container::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+}
+.scrollbar-container:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
 } 
