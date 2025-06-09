@@ -36,7 +36,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
 
   const folderNotes = notes.filter(note => note.folderId === selectedFolderId);
   const currentFolder = folders.find(f => f.id === selectedFolderId);
-  const boardName = currentFolder ? `${currentFolder.name} 보드` : '보드';
+  const boardName = currentFolder ? `${currentFolder.name} Board` : 'Board';
   const ocdEnabled = currentFolder?.ocdEnabled ?? false;
 
   // 뷰포트 위치를 제한하는 함수
@@ -171,7 +171,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     >
       {/* Compact floating toolbar */}
       <div className="no-drag absolute top-4 right-4 bg-white/70 backdrop-blur-md rounded-md px-4 py-2 shadow-md flex items-center space-x-2 z-50">
-        <span className="text-sm font-medium">{`${boardName} (${folderNotes.length} 노트)`}</span>
+        <span className="text-sm font-medium">{`${boardName} (${folderNotes.length} notes)`}</span>
         <span className="text-gray-400">|</span>
         <label className="inline-flex items-center cursor-pointer">
           <span className="text-sm mr-1">OCD</span>
@@ -189,12 +189,12 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
         <span className="text-gray-400">|</span>
         <button onClick={shuffleNotes} className="flex items-center gap-1 text-sm">
           <ArrowsRightLeftIcon className="w-5 h-5" />
-          <span>노트 섞기</span>
+          <span>Shuffle Notes</span>
         </button>
         <span className="text-gray-400">|</span>
         <button onClick={saveLayout} disabled={saving} className="flex items-center justify-center gap-1 text-sm min-w-[7rem]">
           <ArrowDownTrayIcon className="w-5 h-5" />
-          <span>{saving ? '저장중' : saved ? '저장완료' : '레이아웃 저장'}</span>
+          <span>{saving ? 'Saving...' : saved ? 'Saved' : 'Save Layout'}</span>
         </button>
       </div>
       <div 

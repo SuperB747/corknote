@@ -62,7 +62,7 @@ const Sidebar: React.FC = () => {
           }}
           className="text-sm font-semibold text-gray-800 cursor-pointer"
         >
-          새로운 보드 추가
+          Add New Board
         </h2>
         <button
           onClick={() => {
@@ -150,20 +150,20 @@ const Sidebar: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
           <div className="bg-white rounded-lg p-6 w-80 shadow-xl border border-gray-200">
             <p className="text-center text-gray-900 font-semibold text-lg mb-4">
-              {`${folderToDelete.name} 보드를 정말 삭제하시겠습니까? (모든 노트도 삭제됩니다)`}
+              {`Are you sure you want to delete \"${folderToDelete.name}\" board and all its notes?`}
             </p>
             <div className="flex justify-center gap-4">
               <button
                 onClick={cancelDeleteFolder}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded"
               >
-                취소
+                Cancel
               </button>
               <button
                 onClick={confirmDeleteFolder}
                 className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
               >
-                삭제
+                Delete
               </button>
             </div>
           </div>

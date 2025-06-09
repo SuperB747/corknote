@@ -32,10 +32,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
         await updatePassword(user, password);
       }
       
-      setSuccess('프로필이 성공적으로 업데이트되었습니다.');
+      setSuccess('Profile updated successfully.');
       setPassword(''); // 보안을 위해 비밀번호 필드 초기화
     } catch (err) {
-      setError('프로필 업데이트 중 오류가 발생했습니다.');
+      setError('Error updating profile.');
       console.error('Error updating profile:', err);
     }
   };
@@ -58,14 +58,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
             className="p-1 hover:bg-gray-100 rounded-full"
-            title="설정"
+            title="Settings"
           >
             <Cog6ToothIcon className="w-5 h-5 text-gray-600" />
           </button>
           <button
             onClick={handleLogout}
             className="p-1 hover:bg-gray-100 rounded-full"
-            title="로그아웃"
+            title="Logout"
           >
             <ArrowRightOnRectangleIcon className="w-5 h-5 text-gray-600" />
           </button>
@@ -74,17 +74,17 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
 
       {isSettingsOpen && (
         <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-50 relative">
-          <h3 className="text-lg font-semibold mb-4">사용자 설정</h3>
+          <h3 className="text-lg font-semibold mb-4">User Settings</h3>
           <button
             onClick={() => setIsSettingsOpen(false)}
             className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full"
-            title="닫기"
+            title="Close"
           >
             <XMarkIcon className="w-5 h-5 text-gray-600" />
           </button>
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700">이름</label>
+              <label className="block text-sm font-medium text-gray-700">Name</label>
               <input
                 type="text"
                 value={displayName}
@@ -93,7 +93,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">이메일</label>
+              <label className="block text-sm font-medium text-gray-700">Email</label>
               <input
                 type="email"
                 value={email}
@@ -102,12 +102,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">새 비밀번호</label>
+              <label className="block text-sm font-medium text-gray-700">New Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="변경하려면 입력하세요"
+                placeholder="Enter new password"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
             </div>
@@ -121,7 +121,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
               onClick={handleUpdateProfile}
               className="w-full bg-blue-600 text-white rounded-md py-2 px-4 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              저장
+              Save
             </button>
           </div>
         </div>

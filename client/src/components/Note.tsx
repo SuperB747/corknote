@@ -326,20 +326,20 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
           <div className="bg-white rounded-lg p-6 w-80 shadow-xl border border-gray-200">
             <p className="text-center text-gray-900 font-semibold text-lg mb-4">
-              정말 이 노트를 삭제하시겠습니까?
+              Are you sure you want to delete this note?
             </p>
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded"
               >
-                취소
+                Cancel
               </button>
               <button
                 onClick={() => { deleteNote(note.id); setShowDeleteConfirm(false); }}
                 className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
               >
-                삭제
+                Delete
               </button>
             </div>
           </div>
