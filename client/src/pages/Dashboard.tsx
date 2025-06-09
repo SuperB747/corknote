@@ -18,14 +18,6 @@ const Dashboard: React.FC = () => {
   } = useNoteStore();
   const [newNoteId, setNewNoteId] = useState<string | null>(null);
 
-  if (!isLoading && folders.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-gray-600">No boards found. Please create a new board to get started.</p>
-      </div>
-    );
-  }
-
   useEffect(() => {
     if (currentUser && folders.length > 0 && !selectedFolderId) {
       const last = localStorage.getItem('lastFolderId');
@@ -54,6 +46,14 @@ const Dashboard: React.FC = () => {
       loadNotes(currentUser.uid, selectedFolderId);
     }
   }, [currentUser, selectedFolderId, loadNotes]);
+
+  if (!isLoading && folders.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <p className="text-gray-600">No boards found. Please create a new board to get started.</p>
+      </div>
+    );
+  }
 
   const handleCreateNote = async () => {
     if (currentUser && selectedFolderId) {
