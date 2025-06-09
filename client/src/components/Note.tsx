@@ -217,17 +217,17 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               </label>
             ))}
           </div>
-          {/* Editor container: content scrolls, controls fixed at bottom */}
+          {/* Editor container: flexible content area with scroll, controls fixed at bottom */}
           <div className="flex flex-col h-full">
-            {/* Note editing inner padding: adjust the 'p-2' value as needed */}
-            <div className="flex-1 p-1">
+            {/* Note editing inner padding: title and editor area */}
+            <div className="flex flex-col flex-1 p-1">
               <input
                 className="w-full bg-transparent border-b border-gray-400 focus:outline-none"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onFocus={() => initialEditing && title === note.title && setTitle('')}
               />
-              <div className="mt-2 h-full">
+              <div className="mt-2 flex-1 overflow-auto scrollbar-container">
                 {/* @ts-ignore */}
                 <ReactQuill
                   theme="snow"
@@ -235,7 +235,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
                   onChange={setContent}
                   modules={quillModules}
                   formats={quillFormats}
-                  className="h-56" // adjust height as needed
+                  className="h-full"
                 />
               </div>
             </div>
