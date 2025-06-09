@@ -37,19 +37,21 @@ if (getApps().length > 0) {
   private initializeEmulators() {
     if (this.initialized) return;
 
-    try {
-      setPersistence(this.auth, inMemoryPersistence);
-      
-      connectAuthEmulator(this.auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-      connectFirestoreEmulator(this.db, '127.0.0.1', 8080);
-      connectStorageEmulator(this.storage, '127.0.0.1', 9199);
-      
-      console.log('Successfully connected to Firebase emulators');
-      this.initialized = true;
-    } catch (error) {
-      console.error('Error connecting to emulators:', error);
-      throw error;
+    // Only connect to emulators in development
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        setPersistence(this.auth, inMemoryPersistence);
+        connectAuthEmulator(this.auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+        connectFirestoreEmulator(this.db, '127.0.0.1', 8080);
+        connectStorageEmulator(this.storage, '127.0.0.1', 9199);
+        console.log('Connected to Firebase emulators');
+      } catch (error) {
+        console.error('Error connecting to Firebase emulators:', error);
+        throw error;
+      }
     }
+    // In production, skip emulator connection
+    this.initialized = true;
   }
 
   public static getInstance(): FirebaseService {
