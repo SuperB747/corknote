@@ -56,203 +56,219 @@ interface NoteStore {
   setError: (error: string | null) => void;
 }
 
-const useNoteStore = create<NoteStore>((set, get) => ({
-  notes: [],
-  folders: [],
-  selectedFolderId: null,
-  unsavedChanges: false,
-  isLoading: false,
-  error: null,
+const useNoteStore = create<NoteStore>((set, get) => {
+  // In-memory cache: folderId -> notes array
+  const notesCache: Record<string, Note[]> = {};
+  return {
+    notes: [],
+    folders: [],
+    selectedFolderId: null,
+    unsavedChanges: false,
+    isLoading: false,
+    error: null,
 
-  // Folder actions
-  loadFolders: async (userId: string) => {
-    try {
-      set({ isLoading: true, error: null });
-      const folders = await folderService.getFolders(userId);
-      set({ folders, isLoading: false });
-    } catch (error) {
-      set({ error: 'Failed to load folders', isLoading: false });
-    }
-  },
-
-  createFolder: async (userId: string, name: string) => {
-    try {
-      set({ isLoading: true, error: null });
-      const newFolder = await folderService.createFolder(userId, name);
-      set(state => ({
-        folders: [...state.folders, newFolder],
-        isLoading: false
-      }));
-    } catch (error) {
-      set({ error: 'Failed to create folder', isLoading: false });
-    }
-  },
-
-  updateFolder: async (folderId: string, name: string) => {
-    try {
-      set({ isLoading: true, error: null });
-      await folderService.updateFolder(folderId, name);
-      set(state => ({
-        folders: state.folders.map(folder =>
-          folder.id === folderId ? { ...folder, name } : folder
-        ),
-        isLoading: false
-      }));
-    } catch (error) {
-      set({ error: 'Failed to update folder', isLoading: false });
-    }
-  },
-
-  deleteFolder: async (folderId: string) => {
-    try {
-      set({ isLoading: true, error: null });
-      await folderService.deleteFolder(folderId);
-      set(state => ({
-        folders: state.folders.filter(folder => folder.id !== folderId),
-        selectedFolderId: state.selectedFolderId === folderId ? null : state.selectedFolderId,
-        isLoading: false
-      }));
-    } catch (error) {
-      set({ error: 'Failed to delete folder', isLoading: false });
-    }
-  },
-
-  setSelectedFolder: (folderId: string) => set({ selectedFolderId: folderId }),
-
-  updateFolderSettings: async (folderId: string, ocdEnabled: boolean) => {
-    try {
-      set({ isLoading: true, error: null });
-      await folderService.updateFolderSettings(folderId, { ocdEnabled });
-      set(state => ({
-        folders: state.folders.map(folder =>
-          folder.id === folderId ? { ...folder, ocdEnabled } : folder
-        ),
-        isLoading: false
-      }));
-    } catch (error) {
-      set({ error: 'Failed to update folder settings', isLoading: false });
-    }
-  },
-
-  // Reorder folder list locally
-  reorderFolders: (newOrder: Folder[]) => {
-    set({ folders: newOrder });
-    // Persist the new order to backend (batch update)
-    folderService.updateFoldersOrder(
-      newOrder.map((folder, index) => ({ id: folder.id, order: index }))
-    );
-  },
-
-  // Note actions
-  loadNotes: async (userId: string, folderId: string) => {
-    try {
-      set({ isLoading: true, error: null });
-      const notes = await noteService.getNotes(userId, folderId);
-      set({ notes, isLoading: false });
-    } catch (error) {
-      set({ error: 'Failed to load notes', isLoading: false });
-    }
-  },
-
-  createNote: async (userId: string, title: string, content: string): Promise<Note> => {
-    const { selectedFolderId, notes } = get();
-    if (!selectedFolderId) throw new Error('No folder selected');
-
-    try {
-      set({ isLoading: true, error: null });
-      const maxZIndex = Math.max(...notes.map(note => note.zIndex), 0);
-      const position = { x: Math.random() * 100, y: Math.random() * 100 };
-      const newNote = await noteService.createNote(
-        userId,
-        selectedFolderId,
-        title,
-        content,
-        position,
-        maxZIndex + 1
-      );
-      set(state => ({
-        notes: [...state.notes, newNote],
-        isLoading: false
-      }));
-      return newNote;
-    } catch (error) {
-      set({ error: 'Failed to create note', isLoading: false });
-      throw error;
-    }
-  },
-
-  updateNote: async (noteId: string, data: Partial<{ title: string; content: string; color: string }>) => {
-    try {
-      set({ isLoading: true, error: null });
-      await noteService.updateNote(noteId, data);
-      set(state => ({
-        notes: state.notes.map(note =>
-          note.id === noteId ? { ...note, ...data, updatedAt: new Date() } : note
-        ),
-        isLoading: false
-      }));
-    } catch (error) {
-      set({ error: 'Failed to update note', isLoading: false });
-    }
-  },
-
-  deleteNote: async (noteId: string) => {
-    try {
-      set({ isLoading: true, error: null });
-      await noteService.deleteNote(noteId);
-      set(state => ({
-        notes: state.notes.filter(note => note.id !== noteId),
-        isLoading: false
-      }));
-    } catch (error) {
-      set({ error: 'Failed to delete note', isLoading: false });
-    }
-  },
-
-  updateNotePosition: (noteId: string, position: { x: number; y: number }) => {
-    set(state => {
-      const maxZIndex = Math.max(...state.notes.map(note => note.zIndex), 0);
-      const newZIndex = maxZIndex + 1;
-      // assign new z-index to moved note
-      const updatedNotes = state.notes.map(note =>
-        note.id === noteId ? { ...note, position, zIndex: newZIndex } : note
-      );
-      // renormalize all z-indices if threshold reached
-      if (newZIndex >= 100) {
-        const sorted = [...updatedNotes].sort((a, b) => a.zIndex - b.zIndex);
-        const renormalized = sorted.map((note, idx) => ({ ...note, zIndex: idx + 1 }));
-        return { notes: renormalized, unsavedChanges: true };
+    // Folder actions
+    loadFolders: async (userId: string) => {
+      try {
+        set({ isLoading: true, error: null });
+        const folders = await folderService.getFolders(userId);
+        set({ folders, isLoading: false });
+      } catch (error) {
+        set({ error: 'Failed to load folders', isLoading: false });
       }
-      return { notes: updatedNotes, unsavedChanges: true };
-    });
-  },
+    },
 
-  updateNoteRotation: (noteId: string, rotation: number) => set(state => ({
-    notes: state.notes.map(note => note.id === noteId ? { ...note, rotation } : note),
-    unsavedChanges: true
-  })),
+    createFolder: async (userId: string, name: string) => {
+      try {
+        set({ isLoading: true, error: null });
+        const newFolder = await folderService.createFolder(userId, name);
+        set(state => ({
+          folders: [...state.folders, newFolder],
+          isLoading: false
+        }));
+      } catch (error) {
+        set({ error: 'Failed to create folder', isLoading: false });
+      }
+    },
 
-  updateNoteSize: (noteId: string, sizeCategory: string) => set(state => ({
-    notes: state.notes.map(note => note.id === noteId ? { ...note, sizeCategory } : note),
-    unsavedChanges: true
-  })),
+    updateFolder: async (folderId: string, name: string) => {
+      try {
+        set({ isLoading: true, error: null });
+        await folderService.updateFolder(folderId, name);
+        set(state => ({
+          folders: state.folders.map(folder =>
+            folder.id === folderId ? { ...folder, name } : folder
+          ),
+          isLoading: false
+        }));
+      } catch (error) {
+        set({ error: 'Failed to update folder', isLoading: false });
+      }
+    },
 
-  saveNotePositions: async () => {
-    const { notes } = get();
-    try {
-      set({ isLoading: true, error: null });
-      await noteService.updateNotesPositions(
-        notes.map(note => ({ id: note.id, position: note.position, zIndex: note.zIndex, rotation: note.rotation, sizeCategory: note.sizeCategory }))
+    deleteFolder: async (folderId: string) => {
+      try {
+        set({ isLoading: true, error: null });
+        await folderService.deleteFolder(folderId);
+        set(state => ({
+          folders: state.folders.filter(folder => folder.id !== folderId),
+          selectedFolderId: state.selectedFolderId === folderId ? null : state.selectedFolderId,
+          isLoading: false
+        }));
+      } catch (error) {
+        set({ error: 'Failed to delete folder', isLoading: false });
+      }
+    },
+
+    setSelectedFolder: (folderId: string) => set({ selectedFolderId: folderId }),
+
+    updateFolderSettings: async (folderId: string, ocdEnabled: boolean) => {
+      try {
+        set({ isLoading: true, error: null });
+        await folderService.updateFolderSettings(folderId, { ocdEnabled });
+        set(state => ({
+          folders: state.folders.map(folder =>
+            folder.id === folderId ? { ...folder, ocdEnabled } : folder
+          ),
+          isLoading: false
+        }));
+      } catch (error) {
+        set({ error: 'Failed to update folder settings', isLoading: false });
+      }
+    },
+
+    // Reorder folder list locally
+    reorderFolders: (newOrder: Folder[]) => {
+      set({ folders: newOrder });
+      // Persist the new order to backend (batch update)
+      folderService.updateFoldersOrder(
+        newOrder.map((folder, index) => ({ id: folder.id, order: index }))
       );
-      set({ unsavedChanges: false, isLoading: false });
-    } catch (error) {
-      set({ error: 'Failed to save note positions', isLoading: false });
-    }
-  },
+    },
 
-  // UI state
-  setUnsavedChanges: (value: boolean) => set({ unsavedChanges: value }),
-  setError: (error: string | null) => set({ error })
-}));
+    // Note actions
+    loadNotes: async (userId: string, folderId: string) => {
+      // Use cache if available
+      if (notesCache[folderId]) {
+        set({ notes: notesCache[folderId], isLoading: false });
+        return;
+      }
+      try {
+        set({ isLoading: true, error: null });
+        const notes = await noteService.getNotes(userId, folderId);
+        notesCache[folderId] = notes;
+        set({ notes, isLoading: false });
+      } catch (error) {
+        set({ error: 'Failed to load notes', isLoading: false });
+      }
+    },
+
+    createNote: async (userId: string, title: string, content: string): Promise<Note> => {
+      const { selectedFolderId, notes } = get();
+      if (!selectedFolderId) throw new Error('No folder selected');
+
+      try {
+        set({ isLoading: true, error: null });
+        const maxZIndex = Math.max(...notes.map(note => note.zIndex), 0);
+        const position = { x: Math.random() * 100, y: Math.random() * 100 };
+        const newNote = await noteService.createNote(
+          userId,
+          selectedFolderId,
+          title,
+          content,
+          position,
+          maxZIndex + 1
+        );
+        set(state => {
+          const updated = [...state.notes, newNote];
+          // update cache
+          notesCache[selectedFolderId] = updated;
+          return { notes: updated, isLoading: false };
+        });
+        return newNote;
+      } catch (error) {
+        set({ error: 'Failed to create note', isLoading: false });
+        throw error;
+      }
+    },
+
+    updateNote: async (noteId: string, data: Partial<{ title: string; content: string; color: string }>) => {
+      try {
+        set({ isLoading: true, error: null });
+        await noteService.updateNote(noteId, data);
+        set(state => {
+          const updated = state.notes.map(note =>
+            note.id === noteId ? { ...note, ...data, updatedAt: new Date() } : note
+          );
+          // update cache
+          if (state.selectedFolderId) notesCache[state.selectedFolderId] = updated;
+          return { notes: updated, isLoading: false };
+        });
+      } catch (error) {
+        set({ error: 'Failed to update note', isLoading: false });
+      }
+    },
+
+    deleteNote: async (noteId: string) => {
+      try {
+        set({ isLoading: true, error: null });
+        await noteService.deleteNote(noteId);
+        set(state => {
+          const updated = state.notes.filter(note => note.id !== noteId);
+          // update cache
+          if (state.selectedFolderId) notesCache[state.selectedFolderId] = updated;
+          return { notes: updated, isLoading: false };
+        });
+      } catch (error) {
+        set({ error: 'Failed to delete note', isLoading: false });
+      }
+    },
+
+    updateNotePosition: (noteId: string, position: { x: number; y: number }) => {
+      set(state => {
+        const maxZIndex = Math.max(...state.notes.map(note => note.zIndex), 0);
+        const newZIndex = maxZIndex + 1;
+        // assign new z-index to moved note
+        const updatedNotes = state.notes.map(note =>
+          note.id === noteId ? { ...note, position, zIndex: newZIndex } : note
+        );
+        // renormalize all z-indices if threshold reached
+        if (newZIndex >= 100) {
+          const sorted = [...updatedNotes].sort((a, b) => a.zIndex - b.zIndex);
+          const renormalized = sorted.map((note, idx) => ({ ...note, zIndex: idx + 1 }));
+          return { notes: renormalized, unsavedChanges: true };
+        }
+        return { notes: updatedNotes, unsavedChanges: true };
+      });
+    },
+
+    updateNoteRotation: (noteId: string, rotation: number) => set(state => ({
+      notes: state.notes.map(note => note.id === noteId ? { ...note, rotation } : note),
+      unsavedChanges: true
+    })),
+
+    updateNoteSize: (noteId: string, sizeCategory: string) => set(state => ({
+      notes: state.notes.map(note => note.id === noteId ? { ...note, sizeCategory } : note),
+      unsavedChanges: true
+    })),
+
+    saveNotePositions: async () => {
+      const { notes } = get();
+      try {
+        set({ isLoading: true, error: null });
+        await noteService.updateNotesPositions(
+          notes.map(note => ({ id: note.id, position: note.position, zIndex: note.zIndex, rotation: note.rotation, sizeCategory: note.sizeCategory }))
+        );
+        set({ unsavedChanges: false, isLoading: false });
+      } catch (error) {
+        set({ error: 'Failed to save note positions', isLoading: false });
+      }
+    },
+
+    // UI state
+    setUnsavedChanges: (value: boolean) => set({ unsavedChanges: value }),
+    setError: (error: string | null) => set({ error })
+  };
+});
 
 export default useNoteStore; 
