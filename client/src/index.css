@@ -46,4 +46,17 @@ body {
 .ql-editor ol {
   margin-left: 0 !important;
   padding-left: 0.75rem !important;
+}
+
+/* Improve text clarity in transformed notes */
+.note-draggable {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+.note-draggable *,
+.note-draggable h3,
+.note-draggable p {
+  text-rendering: optimizeLegibility;
 } 

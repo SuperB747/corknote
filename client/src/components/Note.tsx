@@ -188,9 +188,9 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       onDragEnd={(e, info) => {
         setIsDragging(false);
         onDragEnd?.(e, info);
-        setIsEditing(true);
-        setDisableHover(true);
-        setIsHovered(false);
+        // After dragging, remain in view mode (don't enter editing)
+        // reset hover disabling so hover effects restore on mouse leave
+        setDisableHover(false);
       }}
     >
       {/* Pin animation: hide while dragging, show on drop with random color */}
