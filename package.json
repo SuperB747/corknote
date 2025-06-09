@@ -6,7 +6,6 @@
     "start": "cd client && npm start",
     "build": "cd client && npm run build",
     "emulator": "firebase emulators:start --import=./firebase-data --export-on-exit",
-    "seed": "node scripts/seed-data.js",
     "init-db": "node scripts/init-firestore.js",
     "start-dev": "npm run init-db && npm run emulator"
   },

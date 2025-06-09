@@ -7,7 +7,6 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PrivateRoute from './components/PrivateRoute';
-import TestFirestore from './pages/TestFirestore';
 
 function App() {
   return (

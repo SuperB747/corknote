@@ -38,7 +38,7 @@ export const createFolder = async (userId: string, name: string): Promise<Folder
     };
   } catch (error) {
     console.error("Error creating folder in Firestore:", error);
-    throw error; // 에러를 상위로 전파하여 UI에서 인지할 수 있도록 함
+    throw error; // propagate error for UI to handle
   }
 };
 

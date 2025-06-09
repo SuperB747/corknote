@@ -7,7 +7,7 @@ import { MapPinIcon } from '@heroicons/react/24/solid';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-// 형광색 포스트잇 색상 (hex codes)
+// Neon Post-it colors (hex codes)
 const neonColors: Record<string, string> = {
   yellow: '#ffff00',
   green: '#00ff00',
@@ -16,7 +16,7 @@ const neonColors: Record<string, string> = {
   blue: '#00ffff',
 };
 
-// 파스텔 포스트잇 색상 (hex codes)
+// Pastel Post-it colors (hex codes)
 const pastelColors: Record<string, string> = {
   yellow: '#fff7c0',
   green: '#c8f7c5',

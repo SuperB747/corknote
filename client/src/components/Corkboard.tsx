@@ -39,7 +39,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const boardName = currentFolder ? `${currentFolder.name} Board` : 'Board';
   const ocdEnabled = currentFolder?.ocdEnabled ?? false;
 
-  // 뷰포트 위치를 제한하는 함수
+  // Clamp viewport position within board bounds
   const clampPosition = (x: number, y: number) => {
     const maxX = boardSize.width - containerSize.width;
     const maxY = boardSize.height - containerSize.height;
@@ -50,7 +50,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     };
   };
 
-  // 보드와 컨테이너 크기 업데이트
+  // Update board and container dimensions
   useEffect(() => {
     const updateSizes = () => {
       if (corkboardRef.current && containerRef.current) {
@@ -215,11 +215,11 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
             minHeight: '100vh'
           }}
         >
-          {/* 코르크 배경 */}
+          {/* Corkboard background */}
           <div className="absolute inset-0 bg-cork bg-repeat"></div>
           <div className="absolute inset-0 bg-cork-overlay"></div>
           
-          {/* 노트들 */}
+          {/* Notes */}
           {folderNotes.map((note) => (
             <Note
               key={note.id}
