@@ -2,6 +2,7 @@ import { initializeApp, FirebaseApp, getApps, getApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator, inMemoryPersistence, setPersistence, Auth } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator, Firestore } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator, FirebaseStorage } from 'firebase/storage';
+import { getAnalytics, Analytics } from 'firebase/analytics';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY as string,
@@ -10,6 +11,7 @@ const firebaseConfig = {
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET as string,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID as string,
   appId: process.env.REACT_APP_FIREBASE_APP_ID as string,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID as string,
 };
 
 class FirebaseService {
@@ -18,6 +20,7 @@ class FirebaseService {
   private auth: Auth;
   private db: Firestore;
   private storage: FirebaseStorage;
+  private analytics?: Analytics;
   private initialized = false;
 
   private constructor() {
@@ -30,6 +33,15 @@ if (getApps().length > 0) {
     this.auth = getAuth(this.app);
     this.db = getFirestore(this.app);
     this.storage = getStorage(this.app);
+
+    // Initialize Analytics (only in browser)
+    if (typeof window !== 'undefined') {
+      try {
+        this.analytics = getAnalytics(this.app);
+      } catch (err) {
+        console.warn('Firebase Analytics initialization failed:', err);
+      }
+    }
 
     this.initializeEmulators();
   }
@@ -76,6 +88,10 @@ if (getApps().length > 0) {
   public getStorage(): FirebaseStorage {
     return this.storage;
   }
+
+  public getAnalytics(): Analytics | undefined {
+    return this.analytics;
+  }
 }
 
 // Firebase 서비스 인스턴스 생성
@@ -85,4 +101,5 @@ const firebaseService = FirebaseService.getInstance();
 export const firebaseApp = firebaseService.getApp();
 export const firebaseAuth = firebaseService.getAuth();
 export const firebaseDb = firebaseService.getDb();
-export const firebaseStorage = firebaseService.getStorage(); 
+export const firebaseStorage = firebaseService.getStorage();
+export const firebaseAnalytics = firebaseService.getAnalytics(); 
