@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -10,6 +10,9 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Ref for drag constraints on sample board
+  const sampleBoardRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,28 +95,58 @@ const Login: React.FC = () => {
               </p>
             </div>
           </div>
-          {/* 소개 및 샘플 보드 */}
+          {/* About and Sample Board */}
           <div className="lg:w-1/2 w-full flex flex-col space-y-4">
-            <h3 className="text-xl font-semibold">CorkNote란?</h3>
+            <h3 className="text-xl font-semibold">What is CorkNote?</h3>
             <p className="text-gray-700 text-sm">
-              CorkNote는 코르크 보드 스타일의 인터페이스를 제공해 포스트잇처럼 아이디어를 쉽고 직관적으로 관리할 수 있는 노트 앱입니다.
+              CorkNote provides a corkboard-style interface for managing ideas intuitively, just like sticky notes.
             </p>
             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-              <li>드래그 앤 드롭으로 자유롭게 노트 배치</li>
-              <li>폴더별 노트 관리 및 빠른 탐색</li>
-              <li>자동 저장으로 깔끔한 레이아웃 유지</li>
+              <li>Arrange notes freely with drag and drop</li>
+              <li>Organize notes by folder for quick navigation</li>
+              <li>Auto-save to keep your layout tidy</li>
             </ul>
-            <h3 className="text-xl font-semibold mt-4">샘플 보드</h3>
-            <div className="relative bg-cork bg-repeat w-full h-64 rounded-lg overflow-hidden shadow-inner">
-              <div className="absolute top-4 left-6 bg-note-yellow w-24 h-24 rounded shadow-lg p-2 text-xs">
-                Shopping List
-              </div>
-              <div className="absolute top-16 left-32 bg-note-pink w-24 h-24 rounded shadow-lg p-2 text-xs">
-                Project Ideas
-              </div>
-              <div className="absolute top-32 left-12 bg-note-blue w-24 h-24 rounded shadow-lg p-2 text-xs">
-                Tasks
-              </div>
+            <h3 className="text-xl font-semibold mt-4">Sample Board</h3>
+            <div ref={sampleBoardRef} className="relative bg-cork bg-repeat w-full h-64 rounded-lg overflow-hidden shadow-inner">
+              <motion.div
+                drag
+                dragConstraints={sampleBoardRef}
+                dragMomentum={false}
+                className="absolute top-4 left-6 bg-note-yellow w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
+              >
+                <strong className="block mb-1 text-sm">Shopping List</strong>
+                <ul className="list-disc list-inside text-[10px] space-y-0.5">
+                  <li>Milk</li>
+                  <li>Bread</li>
+                  <li>Eggs</li>
+                </ul>
+              </motion.div>
+              <motion.div
+                drag
+                dragConstraints={sampleBoardRef}
+                dragMomentum={false}
+                className="absolute top-16 left-32 bg-note-pink w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
+              >
+                <strong className="block mb-1 text-sm">Project Ideas</strong>
+                <ul className="list-disc list-inside text-[10px] space-y-0.5">
+                  <li>Blog Revamp</li>
+                  <li>App Prototype</li>
+                  <li>UI Sketch</li>
+                </ul>
+              </motion.div>
+              <motion.div
+                drag
+                dragConstraints={sampleBoardRef}
+                dragMomentum={false}
+                className="absolute top-32 left-12 bg-note-blue w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
+              >
+                <strong className="block mb-1 text-sm">Tasks</strong>
+                <ul className="list-disc list-inside text-[10px] space-y-0.5">
+                  <li>Finish report</li>
+                  <li>Email John</li>
+                  <li>Plan meeting</li>
+                </ul>
+              </motion.div>
             </div>
           </div>
         </div>
