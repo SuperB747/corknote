@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, PanInfo } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Note } from '../store/noteStore';
 import useNoteStore from '../store/noteStore';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -61,7 +61,7 @@ interface NoteProps {
   rotation?: number;  // rotation angle in degrees
   initialEditing?: boolean;
   onNewNoteHandled?: () => void;
-  onDragEnd?: (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void;
+  onDragEnd?: (event: any, info: any) => void;
 }
 
 const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
@@ -145,7 +145,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     setShowDeleteConfirm(true);
   };
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (event: any, info: any) => {
     setIsDragging(false);
     onDragEnd?.(event, info);
     // re-pin: new color and re-trigger animation
