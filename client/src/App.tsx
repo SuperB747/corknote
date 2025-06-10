@@ -7,7 +7,6 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PrivateRoute from './components/PrivateRoute';
-import Thanks from './pages/Thanks';
 
 function App() {
   return (
@@ -24,7 +23,6 @@ function App() {
                 </Layout>
               </PrivateRoute>
             } />
-            <Route path="/thanks" element={<Thanks />} />
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </AuthProvider>

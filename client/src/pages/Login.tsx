@@ -283,7 +283,6 @@ const Login: React.FC = () => {
       </Modal>
       <Modal isOpen={openModal==='contact'} onClose={() => setOpenModal(null)} title="Contact Us">
         <form action="https://formspree.io/f/xvgrkneq" method="POST" className="space-y-4">
-          <input type="hidden" name="_next" value="https://corknote.com/thanks" />
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
             <input type="text" name="name" id="name" required className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
