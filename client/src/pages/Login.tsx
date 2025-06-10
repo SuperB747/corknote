@@ -10,7 +10,8 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState<'privacy'|'terms'|'faq'|'contact'|null>(null);
-  const { login } = useAuth();
+  const [resetMessage, setResetMessage] = useState('');
+  const { login, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   // Ref for drag constraints on sample board
@@ -30,6 +31,20 @@ const Login: React.FC = () => {
       setError('Failed to sign in. Please check your credentials.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address above.');
+      return;
+    }
+    try {
+      setError('');
+      await resetPassword(email);
+      setResetMessage('Password reset email sent! Check your inbox.');
+    } catch (err) {
+      setError('Failed to send reset email.');
     }
   };
 
@@ -89,7 +104,18 @@ const Login: React.FC = () => {
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
+              {/* Password reset */}
+              <div className="text-right mt-2">
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  className="text-blue-500 hover:underline text-sm"
+                >
+                  Forgot your password?
+                </button>
+              </div>
             </form>
+            {resetMessage && <div className="text-green-600 text-sm mt-2">{resetMessage}</div>}
             <div className="mt-4 text-center">
               <p className="text-gray-600">
                 Don't have an account?{' '}
