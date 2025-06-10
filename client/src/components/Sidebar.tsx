@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+// @ts-ignore
 import { motion, Reorder } from 'framer-motion';
 import useNoteStore from '../store/noteStore';
 import { useAuth } from '../contexts/AuthContext';
