@@ -13,6 +13,8 @@ const Login: React.FC = () => {
 
   // Ref for drag constraints on sample board
   const sampleBoardRef = useRef<HTMLDivElement>(null);
+  // Random rotations for sample notes (±10deg)
+  const sampleRotations = useRef<number[]>(Array.from({ length: 5 }, () => Math.random() * 20 - 10));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,6 +117,7 @@ const Login: React.FC = () => {
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
+                style={{ rotate: sampleRotations.current[0] }}
                 className="absolute top-4 left-6 bg-note-yellow w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Shopping List</strong>
@@ -130,6 +133,7 @@ const Login: React.FC = () => {
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
+                style={{ rotate: sampleRotations.current[1] }}
                 className="absolute top-16 left-32 bg-note-pink w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Project Ideas</strong>
@@ -145,6 +149,7 @@ const Login: React.FC = () => {
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
+                style={{ rotate: sampleRotations.current[2] }}
                 className="absolute top-32 left-12 bg-note-blue w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Tasks</strong>
@@ -160,6 +165,7 @@ const Login: React.FC = () => {
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
+                style={{ rotate: sampleRotations.current[3] }}
                 className="absolute top-8 left-48 bg-note-green w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Notes Summary</strong>
@@ -175,6 +181,7 @@ const Login: React.FC = () => {
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
+                style={{ rotate: sampleRotations.current[4] }}
                 className="absolute top-36 left-40 bg-purple-200 w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Reminders</strong>
