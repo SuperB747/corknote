@@ -33,10 +33,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const [saved, setSaved] = useState(false);
   // OCD toggle: when true, notes are not rotated
   const [ocdOn, setOcdOn] = useState(false);
-  // Grid arrangement mode: when true, notes snap to a grid
-  const [gridMode, setGridMode] = useState(false);
-  // Spacing between notes in grid mode
-  const GRID_SPACING = 20;
 
   const folderNotes = notes.filter(note => note.folderId === selectedFolderId);
   const currentFolder = folders.find(f => f.id === selectedFolderId);
@@ -93,20 +89,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     });
   };
 
-  // Arrange notes in a grid with minimal spacing
-  const arrangeNotes = () => {
-    const spacing = GRID_SPACING;
-    const cw = containerSize.width;
-    const cols = Math.max(1, Math.floor((cw + spacing) / (NOTE_WIDTH + spacing)));
-    folderNotes.forEach((note, idx) => {
-      const col = idx % cols;
-      const row = Math.floor(idx / cols);
-      const x = col * (NOTE_WIDTH + spacing);
-      const y = row * (NOTE_HEIGHT + spacing);
-      updateNotePosition(note.id, { x, y });
-    });
-  };
-
   // Save current layout (positions)
   const saveLayout = async () => {
     setSaving(true);
@@ -128,10 +110,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     const clampedX = Math.min(boardSize.width - NOTE_WIDTH, Math.max(0, position.x));
     const clampedY = Math.min(boardSize.height - NOTE_HEIGHT, Math.max(0, position.y));
     updateNotePosition(noteId, { x: clampedX, y: clampedY });
-    // If in grid mode, re-arrange notes to maintain grid
-    if (gridMode) {
-      arrangeNotes();
-    }
   };
 
   useEffect(() => {
@@ -209,9 +187,9 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           </div>
         </label>
         <span className="text-gray-400">|</span>
-        <button onClick={() => { setGridMode(true); arrangeNotes(); }} className="flex items-center gap-1 text-sm">
+        <button onClick={shuffleNotes} className="flex items-center gap-1 text-sm">
           <ArrowsRightLeftIcon className="w-5 h-5" />
-          <span>Arrange</span>
+          <span>Shuffle Notes</span>
         </button>
         <span className="text-gray-400">|</span>
         <button onClick={saveLayout} disabled={saving} className="flex items-center justify-center gap-1 text-sm min-w-[7rem]">
