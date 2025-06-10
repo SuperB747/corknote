@@ -217,13 +217,69 @@ const Login: React.FC = () => {
       </motion.div>
       {/* Modals */}
       <Modal isOpen={openModal==='privacy'} onClose={() => setOpenModal(null)} title="Privacy Policy">
-        <p className="mb-2">Your privacy is important to us. [Add your detailed privacy policy content here.]</p>
+        <div className="space-y-4 text-left text-sm text-gray-700">
+          <p>Corknote ("we", "us", "our") values your privacy. This Privacy Policy explains how we collect, use, disclose, and protect your information.</p>
+          <h4 className="font-semibold">1. Information We Collect</h4>
+          <ul className="list-disc list-inside space-y-1">
+            <li><strong>Account Information:</strong> Email address and password when you register.</li>
+            <li><strong>Usage Data:</strong> Actions you take within the app for analytics and improvements.</li>
+          </ul>
+          <h4 className="font-semibold">2. How We Use Your Information</h4>
+          <ul className="list-disc list-inside space-y-1">
+            <li>To provide and maintain our service.</li>
+            <li>To communicate updates, news, and support.</li>
+          </ul>
+          <h4 className="font-semibold">3. Cookies and Tracking</h4>
+          <p>We use cookies and similar technologies to enhance your experience. You can disable cookies in your browser settings.</p>
+          <h4 className="font-semibold">4. Data Security</h4>
+          <p>We implement reasonable security measures, but no system can be 100% secure.</p>
+          <h4 className="font-semibold">5. Changes to This Policy</h4>
+          <p>We may update this policy and will notify you of significant changes.</p>
+          <h4 className="font-semibold">6. Contact Us</h4>
+          <p>For any questions, email us at <a href="mailto:support@corknote.com" className="text-blue-500 hover:underline">support@corknote.com</a>.</p>
+        </div>
       </Modal>
       <Modal isOpen={openModal==='terms'} onClose={() => setOpenModal(null)} title="Terms of Service">
-        <p className="mb-2">[Add your terms of service content here.]</p>
+        <div className="space-y-4 text-left text-sm text-gray-700">
+          <p><strong>Last updated:</strong> [Date]</p>
+          <p>Welcome to Corknote. By accessing or using our service, you agree to these Terms of Service ("Terms"). Please read them carefully.</p>
+          <h4 className="font-semibold">1. Use of Service</h4>
+          <p>You agree to use the service only for lawful and authorized purposes.</p>
+          <h4 className="font-semibold">2. Account Responsibilities</h4>
+          <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.</p>
+          <h4 className="font-semibold">3. Prohibited Conduct</h4>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Violating any applicable laws or regulations.</li>
+            <li>Uploading harmful, deceptive, or illegal content.</li>
+            <li>Interfering with the operation of the service or its security.</li>
+          </ul>
+          <h4 className="font-semibold">4. Intellectual Property</h4>
+          <p>All content, trademarks, and data on Corknote are the property of Corknote or its licensors and are protected by intellectual property laws.</p>
+          <h4 className="font-semibold">5. Disclaimer of Warranties</h4>
+          <p>The service is provided on an "as is" and "as available" basis without warranties of any kind, express or implied.</p>
+          <h4 className="font-semibold">6. Limitation of Liability</h4>
+          <p>To the maximum extent permitted by law, Corknote will not be liable for indirect, incidental, special, or consequential damages.</p>
+          <h4 className="font-semibold">7. Changes to Terms</h4>
+          <p>We may modify these Terms at any time. We will notify you of significant changes, and continued use constitutes acceptance.</p>
+          <h4 className="font-semibold">8. Governing Law</h4>
+          <p>These Terms are governed by the laws of [Your Jurisdiction].</p>
+          <h4 className="font-semibold">9. Contact Us</h4>
+          <p>For questions about these Terms, email us at <a href="mailto:support@corknote.com" className="text-blue-500 hover:underline">support@corknote.com</a>.</p>
+        </div>
       </Modal>
       <Modal isOpen={openModal==='faq'} onClose={() => setOpenModal(null)} title="FAQ">
-        <p className="mb-2">[Add your frequently asked questions and answers here.]</p>
+        <div className="space-y-4 text-left text-sm text-gray-700">
+          <h4 className="font-semibold">How do I reset my password?</h4>
+          <p>You can reset your password by clicking "Forgot password?" on the login screen and following the instructions sent to your email.</p>
+          <h4 className="font-semibold">How do I create an account?</h4>
+          <p>Click the "Sign up" link on the login page and fill out the registration form with a valid email and password.</p>
+          <h4 className="font-semibold">Is Corknote free to use?</h4>
+          <p>Yes, Corknote is completely free with no hidden costs or premium plans.</p>
+          <h4 className="font-semibold">How do I save and organize my notes?</h4>
+          <p>You can create folders to organize your notes, drag and drop sticky notes on the board, and save your layout manually.</p>
+          <h4 className="font-semibold">Can I use Corknote offline?</h4>
+          <p>Corknote currently requires an internet connection to sync your data securely. Offline support may be added in the future.</p>
+        </div>
       </Modal>
       <Modal isOpen={openModal==='contact'} onClose={() => setOpenModal(null)} title="Contact Us">
         <p className="mb-2">For inquiries, email <a href="mailto:support@corknote.com" className="text-blue-500 hover:underline">support@corknote.com</a>.</p>
