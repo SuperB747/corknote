@@ -9,4 +9,5 @@ declare module 'react-router-dom' {
 
 declare module 'framer-motion' {
   export const motion: any;
+  export const Reorder: any;
 } 
