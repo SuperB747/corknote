@@ -106,7 +106,10 @@ const Login: React.FC = () => {
               <li>Organize notes by folder for quick navigation</li>
               <li>Auto-save to keep your layout tidy</li>
             </ul>
-            <h3 className="text-xl font-semibold mt-4">Sample Board</h3>
+            <h3 className="text-xl font-semibold mt-4 flex items-baseline">
+              Sample Board
+              <span className="text-indigo-500 italic text-sm ml-2">Give it a try!</span>
+            </h3>
             <div ref={sampleBoardRef} className="relative bg-cork bg-repeat w-full h-64 rounded-lg overflow-hidden shadow-inner">
               <motion.div
                 drag
@@ -114,11 +117,13 @@ const Login: React.FC = () => {
                 dragMomentum={false}
                 className="absolute top-4 left-6 bg-note-yellow w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
-                <strong className="block mb-0 text-xs">Shopping List</strong>
-                <ul className="list-disc list-inside text-[10px] leading-none">
+                <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Shopping List</strong>
+                <ul className="list-disc list-inside text-[9px] leading-none">
                   <li>Milk</li>
                   <li>Bread</li>
                   <li>Eggs</li>
+                  <li>Butter</li>
+                  <li>Jam</li>
                 </ul>
               </motion.div>
               <motion.div
@@ -127,11 +132,13 @@ const Login: React.FC = () => {
                 dragMomentum={false}
                 className="absolute top-16 left-32 bg-note-pink w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
-                <strong className="block mb-0 text-xs">Project Ideas</strong>
-                <ul className="list-disc list-inside text-[10px] leading-none">
-                  <li>Blog Revamp</li>
-                  <li>App Prototype</li>
-                  <li>UI Sketch</li>
+                <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Project Ideas</strong>
+                <ul className="list-disc list-inside text-[9px] leading-none">
+                  <li>Blog</li>
+                  <li>App</li>
+                  <li>UI</li>
+                  <li>Demo</li>
+                  <li>Test</li>
                 </ul>
               </motion.div>
               <motion.div
@@ -140,11 +147,13 @@ const Login: React.FC = () => {
                 dragMomentum={false}
                 className="absolute top-32 left-12 bg-note-blue w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
-                <strong className="block mb-0 text-xs">Tasks</strong>
-                <ul className="list-disc list-inside text-[10px] leading-none">
-                  <li>Finish report</li>
-                  <li>Email John</li>
-                  <li>Plan meeting</li>
+                <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Tasks</strong>
+                <ul className="list-disc list-inside text-[9px] leading-none">
+                  <li>Call</li>
+                  <li>Email</li>
+                  <li>Plan</li>
+                  <li>Review</li>
+                  <li>Send</li>
                 </ul>
               </motion.div>
               <motion.div
@@ -153,22 +162,28 @@ const Login: React.FC = () => {
                 dragMomentum={false}
                 className="absolute top-8 left-48 bg-note-green w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
-                <strong className="block mb-0 text-xs">Notes Summary</strong>
-                <ul className="list-disc list-inside text-[10px] leading-none">
-                  <li>Idea 1</li>
-                  <li>Idea 2</li>
+                <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Notes Summary</strong>
+                <ul className="list-disc list-inside text-[9px] leading-none">
+                  <li>IdeaA</li>
+                  <li>IdeaB</li>
+                  <li>IdeaC</li>
+                  <li>IdeaD</li>
+                  <li>IdeaE</li>
                 </ul>
               </motion.div>
               <motion.div
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
-                className="absolute top-36 left-40 bg-note-pink w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
+                className="absolute top-36 left-40 bg-purple-200 w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
-                <strong className="block mb-0 text-xs">Reminders</strong>
-                <ul className="list-disc list-inside text-[10px] leading-none">
-                  <li>Call Mom</li>
-                  <li>Pay Bills</li>
+                <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Reminders</strong>
+                <ul className="list-disc list-inside text-[9px] leading-none">
+                  <li>Bills</li>
+                  <li>Mom</li>
+                  <li>Doctor</li>
+                  <li>Lunch</li>
+                  <li>Email</li>
                 </ul>
               </motion.div>
             </div>
