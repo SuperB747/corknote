@@ -2,12 +2,14 @@ import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
+import Modal from '../components/Modal';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [openModal, setOpenModal] = useState<'privacy'|'terms'|'faq'|'contact'|null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -204,15 +206,28 @@ const Login: React.FC = () => {
             Corknote is a note-taking app that helps you organize your ideas quickly and neatly.
           </p>
           <div className="space-x-4">
-            <Link to="/privacy-policy" className="text-blue-500 hover:underline">Privacy Policy</Link>
-            <Link to="/terms-of-service" className="text-blue-500 hover:underline">Terms of Service</Link>
-            <Link to="/faq" className="text-blue-500 hover:underline">FAQ</Link>
-            <Link to="/contact" className="text-blue-500 hover:underline">Contact Us</Link>
+            <button type="button" onClick={() => setOpenModal('privacy')} className="text-blue-500 hover:underline">Privacy Policy</button>
+            <button type="button" onClick={() => setOpenModal('terms')} className="text-blue-500 hover:underline">Terms of Service</button>
+            <button type="button" onClick={() => setOpenModal('faq')} className="text-blue-500 hover:underline">FAQ</button>
+            <button type="button" onClick={() => setOpenModal('contact')} className="text-blue-500 hover:underline">Contact Us</button>
           </div>
         </div>
         <hr className="my-6 border-gray-300" />
         <p className="text-xs text-gray-500 text-center">© 2025 corknote.com. All rights reserved.</p>
       </motion.div>
+      {/* Modals */}
+      <Modal isOpen={openModal==='privacy'} onClose={() => setOpenModal(null)} title="Privacy Policy">
+        <p className="mb-2">Your privacy is important to us. [Add your detailed privacy policy content here.]</p>
+      </Modal>
+      <Modal isOpen={openModal==='terms'} onClose={() => setOpenModal(null)} title="Terms of Service">
+        <p className="mb-2">[Add your terms of service content here.]</p>
+      </Modal>
+      <Modal isOpen={openModal==='faq'} onClose={() => setOpenModal(null)} title="FAQ">
+        <p className="mb-2">[Add your frequently asked questions and answers here.]</p>
+      </Modal>
+      <Modal isOpen={openModal==='contact'} onClose={() => setOpenModal(null)} title="Contact Us">
+        <p className="mb-2">For inquiries, email <a href="mailto:support@corknote.com" className="text-blue-500 hover:underline">support@corknote.com</a>.</p>
+      </Modal>
     </div>
   );
 };
