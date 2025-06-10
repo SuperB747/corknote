@@ -188,7 +188,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsHovered(false);
         updateNotePosition(note.id, note.position);
       }}
-      onDragEnd={(e, info) => {
+      onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
         onDragEnd?.(e, info);
         // After dragging, remain in view mode (don't enter editing)
@@ -310,7 +310,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           <div
             ref={contentRef}
             className={`mt-0 flex-1 relative text-sm scrollbar-container ${hasOverflow ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'}`}
-            onWheelCapture={e => {
+            onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => {
               // Only intercept vertical scroll when content is overflowed, so note content scrolls
               if (hasOverflow && e.deltaY !== 0) {
                 e.stopPropagation();
