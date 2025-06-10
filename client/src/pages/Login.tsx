@@ -199,6 +199,19 @@ const Login: React.FC = () => {
             </div>
           </div>
         </div>
+        <div className="mt-8 text-center space-y-4">
+          <p className="text-gray-700">
+            Corknote is a note-taking app that helps you organize your ideas quickly and neatly.
+          </p>
+          <div className="space-x-4">
+            <Link to="/privacy-policy" className="text-blue-500 hover:underline">Privacy Policy</Link>
+            <Link to="/terms-of-service" className="text-blue-500 hover:underline">Terms of Service</Link>
+            <Link to="/faq" className="text-blue-500 hover:underline">FAQ</Link>
+            <Link to="/contact" className="text-blue-500 hover:underline">Contact Us</Link>
+          </div>
+        </div>
+        <hr className="my-6 border-gray-300" />
+        <p className="text-xs text-gray-500 text-center">© 2025 corknote.com. All rights reserved.</p>
       </motion.div>
     </div>
   );
