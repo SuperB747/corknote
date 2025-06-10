@@ -282,7 +282,22 @@ const Login: React.FC = () => {
         </div>
       </Modal>
       <Modal isOpen={openModal==='contact'} onClose={() => setOpenModal(null)} title="Contact Us">
-        <p className="mb-2">For inquiries, email <a href="mailto:support@corknote.com" className="text-blue-500 hover:underline">support@corknote.com</a>.</p>
+        <form action="https://formspree.io/f/xvgrkneq" method="POST" className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+            <input type="text" name="name" id="name" required className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <input type="email" name="email" id="email" required className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label htmlFor="message" className="block text-sm font-medium text-gray-700">Message</label>
+            <textarea name="message" id="message" rows={4} required className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+          <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors">Send Message</button>
+        </form>
+        {/* Replace YOUR_FORM_ID with your actual Formspree form ID */}
       </Modal>
     </div>
   );
