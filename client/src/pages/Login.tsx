@@ -104,10 +104,13 @@ const Login: React.FC = () => {
               CorkNote provides a corkboard-style interface for managing ideas intuitively, just like sticky notes.
             </p>
             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+              <li>Completely free to use – no hidden costs!</li>
               <li>Arrange notes freely with drag and drop</li>
               <li>Organize notes by folder for quick navigation</li>
-              <li>Auto-save to keep your layout tidy</li>
+              <li>Save your favorite layouts manually and load them anytime</li>
             </ul>
+            <p className="text-gray-700 text-sm mt-4 italic">Unleash creativity. Visualize your ideas. Make them stick!</p>
+            <p className="text-gray-700 text-sm italic">The perfect tool for thinkers, dreamers, and doers.</p>
             <h3 className="text-xl font-semibold mt-4 flex items-baseline">
               Sample Board
               <span className="text-indigo-500 italic text-sm ml-2">Give it a try!</span>
