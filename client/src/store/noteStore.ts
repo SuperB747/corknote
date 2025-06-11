@@ -268,24 +268,28 @@ const useNoteStore = create<NoteStore>((set, get) => {
     moveNoteToFolder: async (noteId: string, newFolderId: string, position?: { x: number; y: number }) => {
       try {
         set({ isLoading: true, error: null });
-        // call service to update Firestore
+        // Update in Firestore
         await noteService.moveNoteToFolder(noteId, newFolderId, position);
-        // update local state and caches
+        // Update local caches and switch view
         set(state => {
-          // remove from current notes
-          const remaining = state.notes.filter(n => n.id !== noteId);
-          // update cache for old folder
+          // Remove note from old folder cache
           const oldFolderId = state.selectedFolderId;
-          if (oldFolderId) notesCache[oldFolderId] = remaining;
-          // find moved note data
-          const moved = state.notes.find(n => n.id === noteId);
-          if (moved) {
-            const updatedNote = { ...moved, folderId: newFolderId, position: position ?? moved.position };
-            // update cache for new folder
-            const newCache = notesCache[newFolderId] ?? [];
-            notesCache[newFolderId] = [...newCache, updatedNote];
+          const remainingOld = state.notes.filter(n => n.id !== noteId);
+          if (oldFolderId) notesCache[oldFolderId] = remainingOld;
+          // Find moved note and set its new folder and position
+          const movedNote = state.notes.find(n => n.id === noteId);
+          if (movedNote) {
+            const updatedNote = { ...movedNote, folderId: newFolderId, position: position ?? movedNote.position };
+            const newFolderCache = notesCache[newFolderId] ?? [];
+            notesCache[newFolderId] = [...newFolderCache, updatedNote];
           }
-          return { notes: remaining, isLoading: false };
+          // Get new folder notes
+          const newNotes = notesCache[newFolderId] ?? [];
+          return {
+            notes: newNotes,
+            selectedFolderId: newFolderId,
+            isLoading: false
+          };
         });
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
