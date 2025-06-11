@@ -266,10 +266,13 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
               onDragEnd={(_, info) => {
-                // Compute drop position from offset
-                const newX = note.position.x + info.offset.x;
-                const newY = note.position.y + info.offset.y;
-                handleDragEnd(note.id, { x: newX, y: newY });
+                // Calculate drop position relative to board container
+                const rect = containerRef.current?.getBoundingClientRect();
+                if (rect) {
+                  const dropX = info.point.x - rect.left;
+                  const dropY = info.point.y - rect.top;
+                  handleDragEnd(note.id, { x: dropX, y: dropY });
+                }
               }}
               onNewNoteHandled={onNewNoteHandled}
             />
