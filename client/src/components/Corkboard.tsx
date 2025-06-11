@@ -223,7 +223,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           {folderNotes.map((note) => (
             <Note
               key={note.id}
-              id={note.id}
               initialEditing={note.id === newNoteId}
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
