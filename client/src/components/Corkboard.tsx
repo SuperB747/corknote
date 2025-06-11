@@ -213,19 +213,20 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           <span>{saving ? 'Saving...' : saved ? 'Saved' : 'Save Layout'}</span>
         </button>
       </div>
-      <div 
+      <div
         ref={corkboardRef}
         className="absolute inset-0"
-        style={{ 
-          x: gridMode ? 0 : viewportPosition.x,
-          y: gridMode ? 0 : viewportPosition.y,
+        style={{
           cursor: gridMode ? 'default' : (isDragging ? 'grabbing' : 'grab'),
-          touchAction: gridMode ? 'none' : 'none'
+          touchAction: 'none'
         }}
       >
         <div 
           className="absolute"
-          style={{ 
+          style={{
+            transform: gridMode
+              ? 'none'
+              : `translate(${viewportPosition.x}px, ${viewportPosition.y}px)`,
             width: '150%',
             height: '150%',
             minWidth: '100vw',
