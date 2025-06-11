@@ -148,7 +148,9 @@ export const updateNotesPositions = async (
 export const moveNoteToFolder = async (
   noteId: string,
   newFolderId: string,
-  position?: { x: number; y: number }
+  position?: { x: number; y: number },
+  rotation?: number,
+  zIndex?: number
 ): Promise<void> => {
   const noteRef = doc(db, 'notes', noteId);
   const updateData: any = {
@@ -157,6 +159,12 @@ export const moveNoteToFolder = async (
   };
   if (position) {
     updateData.position = position;
+  }
+  if (rotation !== undefined) {
+    updateData.rotation = rotation;
+  }
+  if (zIndex !== undefined) {
+    updateData.zIndex = zIndex;
   }
   await updateDoc(noteRef, updateData);
 }; 

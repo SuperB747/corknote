@@ -24,6 +24,8 @@ export interface Folder {
   order: number;
 }
 
+const MAX_ROTATION_ON_MOVE = 5;
+
 interface NoteStore {
   notes: Note[];
   folders: Folder[];
@@ -50,7 +52,11 @@ interface NoteStore {
   saveNotePositions: () => Promise<void>;
   updateNoteRotation: (noteId: string, rotation: number) => void;
   updateNoteSize: (noteId: string, sizeCategory: string) => void;
-  moveNoteToFolder: (noteId: string, newFolderId: string, position?: { x: number; y: number }) => Promise<void>;
+  moveNoteToFolder: (
+    noteId: string,
+    newFolderId: string,
+    position?: { x: number; y: number }
+  ) => Promise<void>;
 
   // UI state
   setUnsavedChanges: (value: boolean) => void;
@@ -265,28 +271,41 @@ const useNoteStore = create<NoteStore>((set, get) => {
       }));
     },
 
-    moveNoteToFolder: async (noteId: string, newFolderId: string, position?: { x: number; y: number }) => {
+    moveNoteToFolder: async (
+      noteId: string,
+      newFolderId: string,
+      position?: { x: number; y: number }
+    ) => {
       try {
         set({ isLoading: true, error: null });
-        // Update in Firestore
-        await noteService.moveNoteToFolder(noteId, newFolderId, position);
+        // Compute random rotation and zIndex for new folder
+        const angle = (Math.random() * 2 - 1) * MAX_ROTATION_ON_MOVE;
+        const newFolderCache = notesCache[newFolderId] ?? [];
+        const maxZ = newFolderCache.reduce((max, n) => Math.max(max, n.zIndex), 0);
+        const newZ = maxZ + 1;
+        // Update in Firestore with new folderId, position, rotation, zIndex
+        await noteService.moveNoteToFolder(noteId, newFolderId, position, angle, newZ);
         // Update local caches and switch view
         set(state => {
-          // Remove note from old folder cache
           const oldFolderId = state.selectedFolderId;
           const remainingOld = state.notes.filter(n => n.id !== noteId);
           if (oldFolderId) notesCache[oldFolderId] = remainingOld;
-          // Find moved note and set its new folder and position
+          // Find moved note and set its new folder and props
           const movedNote = state.notes.find(n => n.id === noteId);
           if (movedNote) {
-            const updatedNote = { ...movedNote, folderId: newFolderId, position: position ?? movedNote.position };
-            const newFolderCache = notesCache[newFolderId] ?? [];
-            notesCache[newFolderId] = [...newFolderCache, updatedNote];
+            const updatedNote = {
+              ...movedNote,
+              folderId: newFolderId,
+              position: position ?? movedNote.position,
+              rotation: angle,
+              zIndex: newZ
+            };
+            const updatedNewCache = notesCache[newFolderId] ?? [];
+            notesCache[newFolderId] = [...updatedNewCache, updatedNote];
           }
-          // Get new folder notes
-          const newNotes = notesCache[newFolderId] ?? [];
+          // Switch to new folder and show its notes
           return {
-            notes: newNotes,
+            notes: notesCache[newFolderId] ?? [],
             selectedFolderId: newFolderId,
             isLoading: false
           };
