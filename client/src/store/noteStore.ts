@@ -281,42 +281,28 @@ const useNoteStore = create<NoteStore>((set, get) => {
         set({ isLoading: true, error: null });
         // Compute random rotation and zIndex for new folder
         const angle = (Math.random() * 2 - 1) * MAX_ROTATION_ON_MOVE;
-        const currentCache = notesCache[newFolderId] ?? [];
-        const maxZ = currentCache.reduce((max, n) => Math.max(max, n.zIndex), 0);
+        const newCache = notesCache[newFolderId] ?? [];
+        const maxZ = newCache.reduce((max, n) => Math.max(max, n.zIndex), 0);
         const newZ = maxZ + 1;
-        // Update in Firestore with new folderId, position, rotation, zIndex
+        // Update in Firestore
         await noteService.moveNoteToFolder(noteId, newFolderId, position, angle, newZ);
-        // Refresh full notes list for new folder from Firestore
+        // Remove from old folder cache
+        const oldFolderId = get().selectedFolderId;
+        if (oldFolderId && notesCache[oldFolderId]) {
+          notesCache[oldFolderId] = notesCache[oldFolderId].filter(n => n.id !== noteId);
+        }
+        // Fetch fresh notes for new folder
         const user = firebaseAuth.currentUser;
+        let freshNotes: Note[] = [];
         if (user) {
-          const freshNotes = await noteService.getNotes(user.uid, newFolderId);
+          freshNotes = await noteService.getNotes(user.uid, newFolderId);
           notesCache[newFolderId] = freshNotes;
         }
-
-        // Update local caches and switch view
-        set(state => {
-          const oldFolderId = state.selectedFolderId;
-          const remainingOld = state.notes.filter(n => n.id !== noteId);
-          if (oldFolderId) notesCache[oldFolderId] = remainingOld;
-          // Find moved note and set its new folder and props
-          const movedNote = state.notes.find(n => n.id === noteId);
-          if (movedNote) {
-            const updatedNote = {
-              ...movedNote,
-              folderId: newFolderId,
-              position: position ?? movedNote.position,
-              rotation: angle,
-              zIndex: newZ
-            };
-            const updatedNewCache = notesCache[newFolderId] ?? [];
-            notesCache[newFolderId] = [...updatedNewCache, updatedNote];
-          }
-          // Switch to new folder and show its notes
-          return {
-            notes: notesCache[newFolderId] ?? [],
-            selectedFolderId: newFolderId,
-            isLoading: false
-          };
+        // Switch view to new folder
+        set({
+          notes: freshNotes,
+          selectedFolderId: newFolderId,
+          isLoading: false
         });
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
