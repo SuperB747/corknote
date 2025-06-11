@@ -15,7 +15,7 @@ interface CorkboardProps {
   onNewNoteHandled?: () => void;
 }
 const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) => {
-  const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation } = useNoteStore();
+  const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation, unsavedChanges } = useNoteStore();
   const corkboardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   // Grid Mode toggle state (UI only)
@@ -121,6 +121,8 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
       }
     }
     updateNotePosition(noteId, { x: finalX, y: finalY });
+    // Automatically save layout after moving note
+    saveLayout();
   };
 
   useEffect(() => {
@@ -198,7 +200,11 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           </div>
         </label>
         <span className="text-gray-400">|</span>
-        <button onClick={saveLayout} disabled={saving} className="flex items-center justify-center gap-1 text-sm min-w-[7rem]">
+        <button
+          onClick={saveLayout}
+          disabled={saving || !unsavedChanges}
+          className={`flex items-center justify-center gap-1 text-sm min-w-[7rem] ${!unsavedChanges ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
           <ArrowDownTrayIcon className="w-5 h-5" />
           <span>{saving ? 'Saving...' : saved ? 'Saved' : 'Save Layout'}</span>
         </button>
