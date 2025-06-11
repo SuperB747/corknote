@@ -100,6 +100,7 @@ const Sidebar: React.FC = () => {
         {folders.map((folder) => (
           <Reorder.Item initial={false}
             key={folder.id}
+            data-folder-id={folder.id}
             value={folder}
             onClick={() => setSelectedFolder(folder.id)}
             className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${

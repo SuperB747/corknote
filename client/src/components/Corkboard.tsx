@@ -15,7 +15,7 @@ interface CorkboardProps {
   onNewNoteHandled?: () => void;
 }
 const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) => {
-  const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation } = useNoteStore();
+  const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation, moveNoteToFolder } = useNoteStore();
   const corkboardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   // Reset pan position when switching boards
@@ -227,9 +227,21 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
               onDragEnd={(_, info) => {
+                // update position on board
                 const newX = note.position.x + info.offset.x;
                 const newY = note.position.y + info.offset.y;
                 handleDragEnd(note.id, { x: newX, y: newY });
+                // detect drop onto sidebar folder
+                if (info.point) {
+                  const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
+                  const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
+                  if (folderElem) {
+                    const newFolderId = folderElem.getAttribute('data-folder-id');
+                    if (newFolderId && newFolderId !== selectedFolderId) {
+                      moveNoteToFolder(note.id, newFolderId);
+                    }
+                  }
+                }
               }}
               onNewNoteHandled={onNewNoteHandled}
             />

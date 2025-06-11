@@ -143,4 +143,12 @@ export const updateNotesPositions = async (
     );
     incrBytesWritten(totalBytes);
   }
+};
+
+export const moveNoteToFolder = async (noteId: string, newFolderId: string): Promise<void> => {
+  const noteRef = doc(db, 'notes', noteId);
+  await updateDoc(noteRef, {
+    folderId: newFolderId,
+    updatedAt: serverTimestamp(),
+  });
 }; 

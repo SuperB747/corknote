@@ -50,6 +50,7 @@ interface NoteStore {
   saveNotePositions: () => Promise<void>;
   updateNoteRotation: (noteId: string, rotation: number) => void;
   updateNoteSize: (noteId: string, sizeCategory: string) => void;
+  moveNoteToFolder: (noteId: string, newFolderId: string) => Promise<void>;
 
   // UI state
   setUnsavedChanges: (value: boolean) => void;
@@ -262,6 +263,19 @@ const useNoteStore = create<NoteStore>((set, get) => {
         notes: state.notes.map(note => note.id === noteId ? { ...note, sizeCategory } : note),
         unsavedChanges: true
       }));
+    },
+
+    moveNoteToFolder: async (noteId: string, newFolderId: string) => {
+      try {
+        set({ isLoading: true, error: null });
+        await noteService.moveNoteToFolder(noteId, newFolderId);
+        set(state => ({
+          notes: state.notes.filter(note => note.id !== noteId),
+          isLoading: false
+        }));
+      } catch (error) {
+        set({ error: 'Failed to move note', isLoading: false });
+      }
     },
 
     saveNotePositions: async () => {
