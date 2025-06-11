@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as noteService from '../services/noteService';
 import * as folderService from '../services/folderService';
+import { firebaseAuth } from '../firebase/config';
 
 export interface Note {
   id: string;
@@ -280,11 +281,18 @@ const useNoteStore = create<NoteStore>((set, get) => {
         set({ isLoading: true, error: null });
         // Compute random rotation and zIndex for new folder
         const angle = (Math.random() * 2 - 1) * MAX_ROTATION_ON_MOVE;
-        const newFolderCache = notesCache[newFolderId] ?? [];
-        const maxZ = newFolderCache.reduce((max, n) => Math.max(max, n.zIndex), 0);
+        const currentCache = notesCache[newFolderId] ?? [];
+        const maxZ = currentCache.reduce((max, n) => Math.max(max, n.zIndex), 0);
         const newZ = maxZ + 1;
         // Update in Firestore with new folderId, position, rotation, zIndex
         await noteService.moveNoteToFolder(noteId, newFolderId, position, angle, newZ);
+        // Refresh full notes list for new folder from Firestore
+        const user = firebaseAuth.currentUser;
+        if (user) {
+          const freshNotes = await noteService.getNotes(user.uid, newFolderId);
+          notesCache[newFolderId] = freshNotes;
+        }
+
         // Update local caches and switch view
         set(state => {
           const oldFolderId = state.selectedFolderId;
