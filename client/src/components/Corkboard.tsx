@@ -112,35 +112,31 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   };
 
   const handleDragEnd = (noteId: string, position: { x: number; y: number }) => {
-    console.log('handleDragEnd called, autoAlign:', autoAlign, 'dropping at', position);
-    // Clamp so note stays within board bounds
+    // Clamp within board bounds
     const clampedX = Math.min(boardSize.width - NOTE_WIDTH, Math.max(0, position.x));
     const clampedY = Math.min(boardSize.height - NOTE_HEIGHT, Math.max(0, position.y));
     let finalX = clampedX;
     let finalY = clampedY;
     if (autoAlign) {
-      console.log('Auto Align ON, computing alignment');
-      // px between aligned tops; adjust as needed
-      const HORIZONTAL_GAP = 10;
       const others = folderNotes.filter(n => n.id !== noteId);
-      if (others.length) {
-        // find nearest horizontal neighbor
-        let nearestH = others[0];
-        let minDX = Math.abs(nearestH.position.x - clampedX);
-        others.forEach(n => {
-          const dx = Math.abs(n.position.x - clampedX);
-          if (dx < minDX) { minDX = dx; nearestH = n; }
-        });
-        finalY = nearestH.position.y + HORIZONTAL_GAP;
-        // find nearest vertical neighbor relative to newY
-        let nearestV = others[0];
-        let minDY = Math.abs(nearestV.position.y - finalY);
-        others.forEach(n => {
-          const dy = Math.abs(n.position.y - finalY);
-          if (dy < minDY) { minDY = dy; nearestV = n; }
-        });
-        finalX = nearestV.position.x;
-        console.log('Aligned to neighbor', nearestH.id, nearestV.id, '=>', finalX, finalY);
+      // 1) Align top to nearest left neighbor
+      const leftNeighbors = others.filter(n => n.position.x < clampedX);
+      if (leftNeighbors.length > 0) {
+        const nearestLeft = leftNeighbors.reduce((a, b) => (b.position.x > a.position.x ? b : a));
+        finalY = nearestLeft.position.y; // align top edges
+        // 2) Align left to nearest top neighbor relative to newY
+        const topNeighbors = others.filter(n => n.position.y < finalY);
+        if (topNeighbors.length > 0) {
+          const nearestTop = topNeighbors.reduce((a, b) => (b.position.y > a.position.y ? b : a));
+          finalX = nearestTop.position.x; // align left edges
+        }
+      } else {
+        // No left neighbor: try top neighbor only
+        const topNeighbors = others.filter(n => n.position.y < clampedY);
+        if (topNeighbors.length > 0) {
+          const nearestTop = topNeighbors.reduce((a, b) => (b.position.y > a.position.y ? b : a));
+          finalX = nearestTop.position.x;
+        }
       }
     }
     updateNotePosition(noteId, { x: finalX, y: finalY });
@@ -269,11 +265,11 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               initialEditing={note.id === newNoteId}
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
-              onDragEnd={(event, info) => {
-                // Use the absolute drop position for alignment
-                const droppedX = info.point.x;
-                const droppedY = info.point.y;
-                handleDragEnd(note.id, { x: droppedX, y: droppedY });
+              onDragEnd={(_, info) => {
+                // Compute drop position from offset
+                const newX = note.position.x + info.offset.x;
+                const newY = note.position.y + info.offset.y;
+                handleDragEnd(note.id, { x: newX, y: newY });
               }}
               onNewNoteHandled={onNewNoteHandled}
             />
