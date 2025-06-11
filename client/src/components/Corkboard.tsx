@@ -115,7 +115,39 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     // Clamp so note stays within board bounds
     const clampedX = Math.min(boardSize.width - NOTE_WIDTH, Math.max(0, position.x));
     const clampedY = Math.min(boardSize.height - NOTE_HEIGHT, Math.max(0, position.y));
-    updateNotePosition(noteId, { x: clampedX, y: clampedY });
+    let finalX = clampedX;
+    let finalY = clampedY;
+    if (autoAlign) {
+      // Auto Align: after drop, slide to align with nearest note horizontally then vertically.
+      const HORIZONTAL_GAP = 10; // px vertical gap between aligned tops; adjust as needed
+      // find other notes in same folder
+      const others = folderNotes.filter(n => n.id !== noteId);
+      if (others.length > 0) {
+        // 1) horizontal neighbor: nearest in x distance
+        let nearestH = others[0];
+        let minDX = Math.abs(others[0].position.x - clampedX);
+        others.forEach(n => {
+          const dx = Math.abs(n.position.x - clampedX);
+          if (dx < minDX) {
+            minDX = dx;
+            nearestH = n;
+          }
+        });
+        finalY = nearestH.position.y + HORIZONTAL_GAP;
+        // 2) vertical neighbor: nearest in y distance relative to new Y
+        let nearestV = others[0];
+        let minDY = Math.abs(others[0].position.y - finalY);
+        others.forEach(n => {
+          const dy = Math.abs(n.position.y - finalY);
+          if (dy < minDY) {
+            minDY = dy;
+            nearestV = n;
+          }
+        });
+        finalX = nearestV.position.x; // align left edges
+      }
+    }
+    updateNotePosition(noteId, { x: finalX, y: finalY });
   };
 
   useEffect(() => {
