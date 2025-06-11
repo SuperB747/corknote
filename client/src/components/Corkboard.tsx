@@ -238,7 +238,12 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
                   if (folderElem) {
                     const newFolderId = folderElem.getAttribute('data-folder-id');
                     if (newFolderId && newFolderId !== selectedFolderId) {
-                      moveNoteToFolder(note.id, newFolderId);
+                      // Compute default center position on board
+                      const cx = containerSize.width / 2 - NOTE_WIDTH / 2;
+                      const cy = containerSize.height / 2 - NOTE_HEIGHT / 2;
+                      const defaultX = cx - viewportPosition.x;
+                      const defaultY = cy - viewportPosition.y;
+                      moveNoteToFolder(note.id, newFolderId, { x: defaultX, y: defaultY });
                     }
                   }
                 }

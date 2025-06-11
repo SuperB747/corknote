@@ -50,7 +50,7 @@ interface NoteStore {
   saveNotePositions: () => Promise<void>;
   updateNoteRotation: (noteId: string, rotation: number) => void;
   updateNoteSize: (noteId: string, sizeCategory: string) => void;
-  moveNoteToFolder: (noteId: string, newFolderId: string) => Promise<void>;
+  moveNoteToFolder: (noteId: string, newFolderId: string, position?: { x: number; y: number }) => Promise<void>;
 
   // UI state
   setUnsavedChanges: (value: boolean) => void;
@@ -265,14 +265,28 @@ const useNoteStore = create<NoteStore>((set, get) => {
       }));
     },
 
-    moveNoteToFolder: async (noteId: string, newFolderId: string) => {
+    moveNoteToFolder: async (noteId: string, newFolderId: string, position?: { x: number; y: number }) => {
       try {
         set({ isLoading: true, error: null });
-        await noteService.moveNoteToFolder(noteId, newFolderId);
-        set(state => ({
-          notes: state.notes.filter(note => note.id !== noteId),
-          isLoading: false
-        }));
+        // call service to update Firestore
+        await noteService.moveNoteToFolder(noteId, newFolderId, position);
+        // update local state and caches
+        set(state => {
+          // remove from current notes
+          const remaining = state.notes.filter(n => n.id !== noteId);
+          // update cache for old folder
+          const oldFolderId = state.selectedFolderId;
+          if (oldFolderId) notesCache[oldFolderId] = remaining;
+          // find moved note data
+          const moved = state.notes.find(n => n.id === noteId);
+          if (moved) {
+            const updatedNote = { ...moved, folderId: newFolderId, position: position ?? moved.position };
+            // update cache for new folder
+            const newCache = notesCache[newFolderId] ?? [];
+            notesCache[newFolderId] = [...newCache, updatedNote];
+          }
+          return { notes: remaining, isLoading: false };
+        });
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
       }

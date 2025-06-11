@@ -145,10 +145,18 @@ export const updateNotesPositions = async (
   }
 };
 
-export const moveNoteToFolder = async (noteId: string, newFolderId: string): Promise<void> => {
+export const moveNoteToFolder = async (
+  noteId: string,
+  newFolderId: string,
+  position?: { x: number; y: number }
+): Promise<void> => {
   const noteRef = doc(db, 'notes', noteId);
-  await updateDoc(noteRef, {
+  const updateData: any = {
     folderId: newFolderId,
     updatedAt: serverTimestamp(),
-  });
+  };
+  if (position) {
+    updateData.position = position;
+  }
+  await updateDoc(noteRef, updateData);
 }; 
