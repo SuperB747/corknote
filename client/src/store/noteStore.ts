@@ -303,13 +303,6 @@ const useNoteStore = create<NoteStore>((set, get) => {
           selectedFolderId: newFolderId,
           isLoading: false
         });
-        // Force a fresh reload after a brief delay to ensure UI reflects Firestore
-        const user = firebaseAuth.currentUser;
-        if (user) {
-          setTimeout(() => {
-            get().loadNotes(user.uid, newFolderId, true);
-          }, 200);
-        }
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
       }
