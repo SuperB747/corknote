@@ -20,6 +20,11 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const containerRef = useRef<HTMLDivElement>(null);
   // Grid Mode toggle state (UI only)
   const [gridMode, setGridMode] = useState(false);
+  // Grid configuration (adjustable):
+  const GRID_SPACING = 20; // px gap between notes
+  const GRID_MARGIN_TOP = 20; // px top margin for first row
+  const [gridPositions, setGridPositions] = useState<Record<string,{x:number,y:number}>>({});
+
   // Reset pan position when switching boards
   useEffect(() => {
     setViewportPosition({ x: 0, y: 0 });
@@ -72,6 +77,21 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     window.addEventListener('resize', updateSizes);
     return () => window.removeEventListener('resize', updateSizes);
   }, []);
+
+  // Compute grid positions when gridMode toggles or container width/notes change
+  useEffect(() => {
+    if (!gridMode) return;
+    const cols = Math.max(1, Math.floor((containerSize.width - GRID_SPACING) / (NOTE_WIDTH + GRID_SPACING)));
+    const newPositions: Record<string,{x:number,y:number}> = {};
+    folderNotes.forEach((note, idx) => {
+      const row = Math.floor(idx / cols);
+      const col = idx % cols;
+      const x = col * (NOTE_WIDTH + GRID_SPACING) + GRID_SPACING;
+      const y = row * (NOTE_HEIGHT + GRID_SPACING) + GRID_MARGIN_TOP;
+      newPositions[note.id] = { x, y };
+    });
+    setGridPositions(newPositions);
+  }, [gridMode, containerSize.width, folderNotes]);
 
   // Save current layout (positions)
   const saveLayout = async () => {
@@ -197,14 +217,15 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
         ref={corkboardRef}
         className="absolute inset-0"
         style={{ 
-          cursor: isDragging ? 'grabbing' : 'grab',
-          touchAction: 'none'
+          x: gridMode ? 0 : viewportPosition.x,
+          y: gridMode ? 0 : viewportPosition.y,
+          cursor: gridMode ? 'default' : (isDragging ? 'grabbing' : 'grab'),
+          touchAction: gridMode ? 'none' : 'none'
         }}
       >
         <div 
           className="absolute"
           style={{ 
-            transform: `translate(${viewportPosition.x}px, ${viewportPosition.y}px)`,
             width: '150%',
             height: '150%',
             minWidth: '100vw',
@@ -216,20 +237,29 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           <div className="absolute inset-0 bg-cork-overlay"></div>
           
           {/* Notes */}
-          {folderNotes.map((note) => (
-            <Note
-              key={note.id}
-              initialEditing={note.id === newNoteId}
-              note={note}
-              rotation={ocdEnabled ? 0 : note.rotation}
-              onDragEnd={(_, info) => {
-                const newX = note.position.x + info.offset.x;
-                const newY = note.position.y + info.offset.y;
-                handleDragEnd(note.id, { x: newX, y: newY });
-              }}
-              onNewNoteHandled={onNewNoteHandled}
-            />
-          ))}
+          {folderNotes.map((note) => {
+            // Determine position: grid or free
+            const pos = gridMode && gridPositions[note.id]
+              ? gridPositions[note.id]
+              : note.position;
+            // Top margin offset when gridMode to keep notes away from header
+            const offsetY = gridMode ? GRID_MARGIN_TOP : 0;
+            return (
+              <Note
+                key={note.id}
+                initialEditing={note.id === newNoteId}
+                note={note}
+                rotation={ocdEnabled ? 0 : note.rotation}
+                stylePosition={{ x: pos.x, y: pos.y + offsetY }}
+                onDragEnd={(_, info) => {
+                  const newX = note.position.x + info.offset.x;
+                  const newY = note.position.y + info.offset.y;
+                  handleDragEnd(note.id, { x: newX, y: newY });
+                }}
+                onNewNoteHandled={onNewNoteHandled}
+              />
+            );
+          })}
         </div>
       </div>
       {process.env.NODE_ENV === 'development' && <FirebaseUsageMonitor />}
