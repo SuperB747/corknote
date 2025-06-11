@@ -268,6 +268,10 @@ const useNoteStore = create<NoteStore>((set, get) => {
     moveNoteToFolder: async (noteId: string, newFolderId: string) => {
       try {
         set({ isLoading: true, error: null });
+        // Clear cache for old and new folders to force reload
+        const oldFolderId = get().selectedFolderId;
+        delete notesCache[oldFolderId as string];
+        delete notesCache[newFolderId];
         await noteService.moveNoteToFolder(noteId, newFolderId);
         set(state => ({
           notes: state.notes.filter(note => note.id !== noteId),
