@@ -238,8 +238,20 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
                   if (folderElem) {
                     const newFolderId = folderElem.getAttribute('data-folder-id');
                     if (newFolderId && newFolderId !== selectedFolderId) {
+                      // move the note in backend
                       moveNoteToFolder(note.id, newFolderId);
-                      // navigate to new folder to immediately reflect move
+                      // highlight drop target
+                      folderElem.classList.add('bg-blue-100');
+                      setTimeout(() => folderElem.classList.remove('bg-blue-100'), 500);
+                      // animate note into sidebar icon
+                      const noteElem = document.getElementById(note.id);
+                      if (noteElem) {
+                        noteElem.animate([
+                          { transform: `translate(${info.offset.x}px, ${info.offset.y}px)` },
+                          { transform: 'scale(0) translateY(-50%)', opacity: 0 }
+                        ], { duration: 400, easing: 'ease-in' });
+                      }
+                      // switch to new folder and reload notes
                       setSelectedFolder(newFolderId);
                     }
                   }
