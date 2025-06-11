@@ -112,39 +112,35 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   };
 
   const handleDragEnd = (noteId: string, position: { x: number; y: number }) => {
+    console.log('handleDragEnd called, autoAlign:', autoAlign, 'dropping at', position);
     // Clamp so note stays within board bounds
     const clampedX = Math.min(boardSize.width - NOTE_WIDTH, Math.max(0, position.x));
     const clampedY = Math.min(boardSize.height - NOTE_HEIGHT, Math.max(0, position.y));
     let finalX = clampedX;
     let finalY = clampedY;
     if (autoAlign) {
-      // Auto Align: after drop, slide to align with nearest note horizontally then vertically.
-      const HORIZONTAL_GAP = 10; // px vertical gap between aligned tops; adjust as needed
-      // find other notes in same folder
+      console.log('Auto Align ON, computing alignment');
+      // px between aligned tops; adjust as needed
+      const HORIZONTAL_GAP = 10;
       const others = folderNotes.filter(n => n.id !== noteId);
-      if (others.length > 0) {
-        // 1) horizontal neighbor: nearest in x distance
+      if (others.length) {
+        // find nearest horizontal neighbor
         let nearestH = others[0];
-        let minDX = Math.abs(others[0].position.x - clampedX);
+        let minDX = Math.abs(nearestH.position.x - clampedX);
         others.forEach(n => {
           const dx = Math.abs(n.position.x - clampedX);
-          if (dx < minDX) {
-            minDX = dx;
-            nearestH = n;
-          }
+          if (dx < minDX) { minDX = dx; nearestH = n; }
         });
         finalY = nearestH.position.y + HORIZONTAL_GAP;
-        // 2) vertical neighbor: nearest in y distance relative to new Y
+        // find nearest vertical neighbor relative to newY
         let nearestV = others[0];
-        let minDY = Math.abs(others[0].position.y - finalY);
+        let minDY = Math.abs(nearestV.position.y - finalY);
         others.forEach(n => {
           const dy = Math.abs(n.position.y - finalY);
-          if (dy < minDY) {
-            minDY = dy;
-            nearestV = n;
-          }
+          if (dy < minDY) { minDY = dy; nearestV = n; }
         });
-        finalX = nearestV.position.x; // align left edges
+        finalX = nearestV.position.x;
+        console.log('Aligned to neighbor', nearestH.id, nearestV.id, '=>', finalX, finalY);
       }
     }
     updateNotePosition(noteId, { x: finalX, y: finalY });
