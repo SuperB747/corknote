@@ -8,7 +8,8 @@ import {
   where,
   getDocs,
   serverTimestamp,
-  writeBatch
+  writeBatch,
+  getDoc
 } from 'firebase/firestore';
 import { firebaseDb as db } from '../firebase/config';
 import { Note } from '../store/noteStore';
@@ -167,4 +168,27 @@ export const moveNoteToFolder = async (
     updateData.zIndex = zIndex;
   }
   await updateDoc(noteRef, updateData);
+};
+
+/**
+ * Fetch a single note by its ID from Firestore.
+ */
+export const getNoteById = async (noteId: string): Promise<Note> => {
+  const noteRef = doc(db, 'notes', noteId);
+  const snap = await getDoc(noteRef);
+  if (!snap.exists()) throw new Error('Note not found');
+  const data = snap.data();
+  return {
+    id: snap.id,
+    title: data.title,
+    content: data.content,
+    position: data.position,
+    color: data.color || '#fff7c0',
+    zIndex: data.zIndex,
+    rotation: data.rotation,
+    sizeCategory: data.sizeCategory,
+    folderId: data.folderId,
+    createdAt: data.createdAt.toDate(),
+    updatedAt: data.updatedAt.toDate(),
+  };
 }; 

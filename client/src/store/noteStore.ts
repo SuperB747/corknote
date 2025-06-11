@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import * as noteService from '../services/noteService';
 import * as folderService from '../services/folderService';
 import { firebaseAuth } from '../firebase/config';
+import { getNoteById } from '../services/noteService';
 
 export interface Note {
   id: string;
@@ -45,7 +46,7 @@ interface NoteStore {
   reorderFolders: (newOrder: Folder[]) => void;
 
   // Note actions
-  loadNotes: (userId: string, folderId: string) => Promise<void>;
+  loadNotes: (userId: string, folderId: string, forceFetch?: boolean) => Promise<void>;
   createNote: (userId: string, title: string, content: string) => Promise<Note>;
   updateNote: (noteId: string, data: Partial<{ title: string; content: string; color: string }>) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
@@ -157,9 +158,9 @@ const useNoteStore = create<NoteStore>((set, get) => {
     },
 
     // Note actions
-    loadNotes: async (userId: string, folderId: string) => {
-      // Use cache if available
-      if (notesCache[folderId]) {
+    loadNotes: async (userId: string, folderId: string, forceFetch = false) => {
+      // Use cache if available, unless forced
+      if (!forceFetch && notesCache[folderId]) {
         set({ notes: notesCache[folderId], isLoading: false });
         return;
       }
@@ -281,24 +282,22 @@ const useNoteStore = create<NoteStore>((set, get) => {
         set({ isLoading: true, error: null });
         // Compute random rotation and zIndex for new folder
         const angle = (Math.random() * 2 - 1) * MAX_ROTATION_ON_MOVE;
-        const newCache = notesCache[newFolderId] ?? [];
-        const maxZ = newCache.reduce((max, n) => Math.max(max, n.zIndex), 0);
+        const beforeCache = notesCache[newFolderId] ?? [];
+        const maxZ = beforeCache.reduce((max, n) => Math.max(max, n.zIndex), 0);
         const newZ = maxZ + 1;
-        // Update in Firestore
+        // Update Firestore with new folderId and metadata
         await noteService.moveNoteToFolder(noteId, newFolderId, position, angle, newZ);
-        // Remove from old folder cache
+        // Remove note from old folder cache
         const oldFolderId = get().selectedFolderId;
         if (oldFolderId && notesCache[oldFolderId]) {
           notesCache[oldFolderId] = notesCache[oldFolderId].filter(n => n.id !== noteId);
         }
-        // Prepare updated note for new folder
-        const moved = get().notes.find(n => n.id === noteId);
-        const updatedNote = moved
-          ? { ...moved, folderId: newFolderId, position: position ?? moved.position, rotation: angle, zIndex: newZ }
-          : { id: noteId, folderId: newFolderId, position: position ?? { x: 0, y: 0 }, color: '#fff7c0', rotation: angle, zIndex: newZ, title: '', content: '', createdAt: new Date(), updatedAt: new Date(), sizeCategory: 'S' };
+        // Fetch only the moved note from Firestore
+        const fetchedNote = await getNoteById(noteId);
         // Update new folder cache
-        notesCache[newFolderId] = [...newCache, updatedNote];
-        // Switch to new folder and show its notes immediately
+        const newCache = notesCache[newFolderId] ?? [];
+        notesCache[newFolderId] = [...newCache, fetchedNote];
+        // Switch to new folder and display updated cache
         set({
           notes: notesCache[newFolderId],
           selectedFolderId: newFolderId,
@@ -306,8 +305,6 @@ const useNoteStore = create<NoteStore>((set, get) => {
         });
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
-      } finally {
-        set({ isLoading: false });
       }
     },
 
