@@ -62,10 +62,9 @@ interface NoteProps {
   initialEditing?: boolean;
   onNewNoteHandled?: () => void;
   onDragEnd?: (event: any, info: any) => void;
-  stylePosition?: { x: number; y: number };
 }
 
-const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled, stylePosition }) => {
+const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
   const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [title, setTitle] = useState(note.title);
@@ -172,8 +171,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
       style={{
-        x: stylePosition?.x ?? note.position.x,
-        y: stylePosition?.y ?? note.position.y,
+        x: note.position.x,
+        y: note.position.y,
         rotate: rotation,
         transformOrigin: 'center center',
         zIndex: isHovered ? 9999 : note.zIndex,

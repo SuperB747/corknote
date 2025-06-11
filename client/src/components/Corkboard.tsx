@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { ArrowsRightLeftIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import useNoteStore from '../store/noteStore';
 import Note from './Note';
 import FirebaseUsageMonitor from './FirebaseUsageMonitor';
@@ -15,14 +15,9 @@ interface CorkboardProps {
   onNewNoteHandled?: () => void;
 }
 const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) => {
-  const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation, unsavedChanges } = useNoteStore();
+  const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation } = useNoteStore();
   const corkboardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  // Grid Mode toggle state (UI only)
-  const [gridMode, setGridMode] = useState(false);
-  // Auto Align toggle UI (no logic yet)
-  const [autoAlign, setAutoAlign] = useState(false);
-
   // Reset pan position when switching boards
   useEffect(() => {
     setViewportPosition({ x: 0, y: 0 });
@@ -76,6 +71,24 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     return () => window.removeEventListener('resize', updateSizes);
   }, []);
 
+  // Shuffle notes within current viewport bounds
+  const shuffleNotes = () => {
+    const cw = containerSize.width;
+    const ch = containerSize.height;
+    const viewX = -viewportPosition.x;
+    const viewY = -viewportPosition.y;
+    const noteW = NOTE_WIDTH;  // use global constant from Note component
+    const noteH = NOTE_HEIGHT;
+    folderNotes.forEach(note => {
+      const x = viewX + Math.random() * Math.max(0, cw - noteW);
+      const y = viewY + Math.random() * Math.max(0, ch - noteH);
+      updateNotePosition(note.id, { x, y });
+      // generate random rotation between -MAX_ROTATION and +MAX_ROTATION
+      const angle = (Math.random() * 2 - 1) * MAX_ROTATION;
+      updateNoteRotation(note.id, angle);
+    });
+  };
+
   // Save current layout (positions)
   const saveLayout = async () => {
     setSaving(true);
@@ -93,34 +106,10 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   };
 
   const handleDragEnd = (noteId: string, position: { x: number; y: number }) => {
-    // Clamp within board bounds
+    // Clamp so note stays within board bounds
     const clampedX = Math.min(boardSize.width - NOTE_WIDTH, Math.max(0, position.x));
     const clampedY = Math.min(boardSize.height - NOTE_HEIGHT, Math.max(0, position.y));
-    let finalX = clampedX;
-    let finalY = clampedY;
-    if (autoAlign) {
-      const others = folderNotes.filter(n => n.id !== noteId);
-      // 1) Align top to nearest left neighbor
-      const leftNeighbors = others.filter(n => n.position.x < clampedX);
-      if (leftNeighbors.length > 0) {
-        const nearestLeft = leftNeighbors.reduce((a, b) => (b.position.x > a.position.x ? b : a));
-        finalY = nearestLeft.position.y; // align top edges
-        // 2) Align left to nearest top neighbor relative to newY
-        const topNeighbors = others.filter(n => n.position.y < finalY);
-        if (topNeighbors.length > 0) {
-          const nearestTop = topNeighbors.reduce((a, b) => (b.position.y > a.position.y ? b : a));
-          finalX = nearestTop.position.x; // align left edges
-        }
-      } else {
-        // No left neighbor: try top neighbor only
-        const topNeighbors = others.filter(n => n.position.y < clampedY);
-        if (topNeighbors.length > 0) {
-          const nearestTop = topNeighbors.reduce((a, b) => (b.position.y > a.position.y ? b : a));
-          finalX = nearestTop.position.x;
-        }
-      }
-    }
-    updateNotePosition(noteId, { x: finalX, y: finalY });
+    updateNotePosition(noteId, { x: clampedX, y: clampedY });
   };
 
   useEffect(() => {
@@ -193,31 +182,32 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               onChange={() => updateFolderSettings(selectedFolderId as string, !ocdEnabled)}
               className="sr-only"
             />
-            <div className={`w-8 h-4 rounded-full transition-colors ${ocdEnabled ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+            <div className="w-8 h-4 bg-gray-300 rounded-full"></div>
             <div className={`absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow transform transition ${ocdEnabled ? 'translate-x-4' : ''}`}></div>
           </div>
         </label>
         <span className="text-gray-400">|</span>
-        <button
-          onClick={saveLayout}
-          disabled={saving || !unsavedChanges}
-          className={`flex items-center justify-center gap-1 text-sm min-w-[7rem] ${!unsavedChanges ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
+        <button onClick={shuffleNotes} className="flex items-center gap-1 text-sm">
+          <ArrowsRightLeftIcon className="w-5 h-5" />
+          <span>Shuffle Notes</span>
+        </button>
+        <span className="text-gray-400">|</span>
+        <button onClick={saveLayout} disabled={saving} className="flex items-center justify-center gap-1 text-sm min-w-[7rem]">
           <ArrowDownTrayIcon className="w-5 h-5" />
           <span>{saving ? 'Saving...' : saved ? 'Saved' : 'Save Layout'}</span>
         </button>
       </div>
-      <div
+      <div 
         ref={corkboardRef}
         className="absolute inset-0"
-        style={{
+        style={{ 
           cursor: isDragging ? 'grabbing' : 'grab',
           touchAction: 'none'
         }}
       >
         <div 
           className="absolute"
-          style={{
+          style={{ 
             transform: `translate(${viewportPosition.x}px, ${viewportPosition.y}px)`,
             width: '150%',
             height: '150%',
@@ -230,20 +220,16 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           <div className="absolute inset-0 bg-cork-overlay"></div>
           
           {/* Notes */}
-          {folderNotes.map(note => (
+          {folderNotes.map((note) => (
             <Note
               key={note.id}
               initialEditing={note.id === newNoteId}
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
               onDragEnd={(_, info) => {
-                // Calculate drop position relative to board container
-                const rect = containerRef.current?.getBoundingClientRect();
-                if (rect) {
-                  const dropX = info.point.x - rect.left;
-                  const dropY = info.point.y - rect.top;
-                  handleDragEnd(note.id, { x: dropX, y: dropY });
-                }
+                const newX = note.position.x + info.offset.x;
+                const newY = note.position.y + info.offset.y;
+                handleDragEnd(note.id, { x: newX, y: newY });
               }}
               onNewNoteHandled={onNewNoteHandled}
             />
