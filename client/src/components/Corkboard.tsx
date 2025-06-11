@@ -223,37 +223,46 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           {folderNotes.map((note) => (
             <Note
               key={note.id}
+              id={note.id}
               initialEditing={note.id === newNoteId}
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
-              onDragEnd={(_, info) => {
+              onDragEnd={(event, info) => {
                 // update position on board
                 const newX = note.position.x + info.offset.x;
                 const newY = note.position.y + info.offset.y;
                 handleDragEnd(note.id, { x: newX, y: newY });
-                // detect drop onto sidebar folder
-                if (info.point) {
-                  const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
-                  const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
-                  if (folderElem) {
-                    const newFolderId = folderElem.getAttribute('data-folder-id');
-                    if (newFolderId && newFolderId !== selectedFolderId) {
-                      // move the note in backend
-                      moveNoteToFolder(note.id, newFolderId);
-                      // highlight drop target
-                      folderElem.classList.add('bg-blue-100');
-                      setTimeout(() => folderElem.classList.remove('bg-blue-100'), 500);
-                      // animate note into sidebar icon
-                      const noteElem = document.getElementById(note.id);
-                      if (noteElem) {
-                        noteElem.animate([
-                          { transform: `translate(${info.offset.x}px, ${info.offset.y}px)` },
-                          { transform: 'scale(0) translateY(-50%)', opacity: 0 }
-                        ], { duration: 400, easing: 'ease-in' });
-                      }
-                      // switch to new folder and reload notes
-                      setSelectedFolder(newFolderId);
+                // detect drop onto sidebar folder using event coordinates
+                let x: number, y: number;
+                if ('clientX' in event) {
+                  x = event.clientX;
+                  y = event.clientY;
+                } else if (info.point) {
+                  x = info.point.x;
+                  y = info.point.y;
+                } else {
+                  return;
+                }
+                const elem = document.elementFromPoint(x, y) as HTMLElement | null;
+                const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
+                if (folderElem) {
+                  const newFolderId = folderElem.getAttribute('data-folder-id');
+                  if (newFolderId && newFolderId !== selectedFolderId) {
+                    // move backend and local state
+                    moveNoteToFolder(note.id, newFolderId);
+                    // highlight folder
+                    folderElem.classList.add('bg-blue-100');
+                    setTimeout(() => folderElem.classList.remove('bg-blue-100'), 500);
+                    // animate note
+                    const noteElem = document.getElementById(note.id);
+                    if (noteElem) {
+                      noteElem.animate([
+                        { transform: `translate(${newX - note.position.x}px, ${newY - note.position.y}px)` },
+                        { transform: 'scale(0) translateY(-50%)', opacity: 0 }
+                      ], { duration: 400, easing: 'ease-in' });
                     }
+                    // switch folder
+                    setSelectedFolder(newFolderId);
                   }
                 }
               }}

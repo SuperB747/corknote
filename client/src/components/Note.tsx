@@ -155,6 +155,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
 
   return (
     <motion.div
+      id={note.id}
       transition={{ default: { duration: 0 } }}
       initial={false}
       className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
@@ -175,7 +176,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         y: note.position.y,
         rotate: rotation,
         transformOrigin: 'center center',
-        zIndex: isHovered ? 9999 : note.zIndex,
+        zIndex: isDragging ? 99999 : (isHovered ? 9999 : note.zIndex),
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
