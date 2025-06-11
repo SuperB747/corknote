@@ -291,16 +291,19 @@ const useNoteStore = create<NoteStore>((set, get) => {
         if (oldFolderId && notesCache[oldFolderId]) {
           notesCache[oldFolderId] = notesCache[oldFolderId].filter(n => n.id !== noteId);
         }
-        // Clear new folder cache to force fresh fetch
-        if (notesCache[newFolderId]) {
-          delete notesCache[newFolderId];
-        }
-        // Switch to new folder and reload its notes
-        set({ selectedFolderId: newFolderId });
-        const user = firebaseAuth.currentUser;
-        if (user) {
-          await get().loadNotes(user.uid, newFolderId);
-        }
+        // Prepare updated note for new folder
+        const moved = get().notes.find(n => n.id === noteId);
+        const updatedNote = moved
+          ? { ...moved, folderId: newFolderId, position: position ?? moved.position, rotation: angle, zIndex: newZ }
+          : { id: noteId, folderId: newFolderId, position: position ?? { x: 0, y: 0 }, color: '#fff7c0', rotation: angle, zIndex: newZ, title: '', content: '', createdAt: new Date(), updatedAt: new Date(), sizeCategory: 'S' };
+        // Update new folder cache
+        notesCache[newFolderId] = [...newCache, updatedNote];
+        // Switch to new folder and show its notes immediately
+        set({
+          notes: notesCache[newFolderId],
+          selectedFolderId: newFolderId,
+          isLoading: false
+        });
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
       } finally {
