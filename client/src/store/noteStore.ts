@@ -38,7 +38,7 @@ interface NoteStore {
   updateFolder: (folderId: string, name: string) => Promise<void>;
   deleteFolder: (folderId: string) => Promise<void>;
   setSelectedFolder: (folderId: string) => void;
-  updateFolderSettings: (folderId: string, ocdEnabled: boolean) => Promise<void>;
+  updateFolderSettings: (folderId: string, ocdEnabled: boolean) => void;
   reorderFolders: (newOrder: Folder[]) => void;
 
   // Note actions
@@ -61,6 +61,8 @@ const useNoteStore = create<NoteStore>((set, get) => {
   const notesCache: Record<string, Note[]> = {};
   // Track which notes have unsaved layout changes
   const changedNoteIds = new Set<string>();
+  // Track which folders have unsaved settings changes (e.g., OCD toggle)
+  const changedFolderSettings: Record<string, Partial<{ ocdEnabled: boolean }>> = {};
   return {
     notes: [],
     folders: [],
@@ -124,19 +126,15 @@ const useNoteStore = create<NoteStore>((set, get) => {
 
     setSelectedFolder: (folderId: string) => set({ selectedFolderId: folderId }),
 
-    updateFolderSettings: async (folderId: string, ocdEnabled: boolean) => {
-      try {
-        set({ isLoading: true, error: null });
-        await folderService.updateFolderSettings(folderId, { ocdEnabled });
-        set(state => ({
-          folders: state.folders.map(folder =>
-            folder.id === folderId ? { ...folder, ocdEnabled } : folder
-          ),
-          isLoading: false
-        }));
-      } catch (error) {
-        set({ error: 'Failed to update folder settings', isLoading: false });
-      }
+    updateFolderSettings: (folderId: string, ocdEnabled: boolean) => {
+      // queue folder settings change without persisting immediately
+      changedFolderSettings[folderId] = { ocdEnabled };
+      set(state => ({
+        folders: state.folders.map(folder =>
+          folder.id === folderId ? { ...folder, ocdEnabled } : folder
+        ),
+        unsavedChanges: true
+      }));
     },
 
     // Reorder folder list locally
@@ -266,26 +264,46 @@ const useNoteStore = create<NoteStore>((set, get) => {
 
     saveNotePositions: async () => {
       const { notes, selectedFolderId } = get();
-      // only save notes that have been changed
       const changedNotes = notes.filter(note => changedNoteIds.has(note.id));
-      if (changedNotes.length === 0) {
-        // nothing to save
+      const folderSettingsEntries = Object.entries(changedFolderSettings);
+      // nothing to save if no note changes and no folder settings changes
+      if (changedNotes.length === 0 && folderSettingsEntries.length === 0) {
         return;
       }
       try {
         set({ isLoading: true, error: null });
-        await noteService.updateNotesPositions(
-          changedNotes.map(note => ({ id: note.id, position: note.position, zIndex: note.zIndex, rotation: note.rotation, sizeCategory: note.sizeCategory }))
-        );
-        // update cache for current folder so loadNotes returns updated positions
-        if (selectedFolderId) {
-          notesCache[selectedFolderId] = notes;
+        // save notes positions if any
+        if (changedNotes.length > 0) {
+          await noteService.updateNotesPositions(
+            changedNotes.map(note => ({
+              id: note.id,
+              position: note.position,
+              zIndex: note.zIndex,
+              rotation: note.rotation,
+              sizeCategory: note.sizeCategory
+            }))
+          );
+          // update cache for current folder so loadNotes returns updated positions
+          if (selectedFolderId) {
+            notesCache[selectedFolderId] = notes;
+          }
+          changedNoteIds.clear();
         }
-        // clear change tracking and reset flag
-        changedNoteIds.clear();
+        // save folder settings if any
+        if (folderSettingsEntries.length > 0) {
+          await Promise.all(
+            folderSettingsEntries.map(([folderId, settings]) =>
+              folderService.updateFolderSettings(folderId, settings)
+            )
+          );
+          // clear queued folder settings changes
+          folderSettingsEntries.forEach(([folderId]) => {
+            delete changedFolderSettings[folderId];
+          });
+        }
         set({ unsavedChanges: false, isLoading: false });
       } catch (error) {
-        set({ error: 'Failed to save note positions', isLoading: false });
+        set({ error: 'Failed to save layout', isLoading: false });
       }
     },
 
