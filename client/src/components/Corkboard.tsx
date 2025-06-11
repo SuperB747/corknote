@@ -20,10 +20,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const containerRef = useRef<HTMLDivElement>(null);
   // Grid Mode toggle state (UI only)
   const [gridMode, setGridMode] = useState(false);
-  // Grid configuration (adjustable):
-  const GRID_SPACING = 20; // px gap between notes
-  const GRID_MARGIN_TOP = 20; // px top margin for first row
-  const [gridPositions, setGridPositions] = useState<Record<string,{x:number,y:number}>>({});
   // Auto Align toggle UI (no logic yet)
   const [autoAlign, setAutoAlign] = useState(false);
 
@@ -79,21 +75,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     window.addEventListener('resize', updateSizes);
     return () => window.removeEventListener('resize', updateSizes);
   }, []);
-
-  // Compute grid positions when gridMode toggles or container width/notes change
-  useEffect(() => {
-    if (!gridMode) return;
-    const cols = Math.max(1, Math.floor((containerSize.width - GRID_SPACING) / (NOTE_WIDTH + GRID_SPACING)));
-    const newPositions: Record<string,{x:number,y:number}> = {};
-    folderNotes.forEach((note, idx) => {
-      const row = Math.floor(idx / cols);
-      const col = idx % cols;
-      const x = col * (NOTE_WIDTH + GRID_SPACING) + GRID_SPACING;
-      const y = row * (NOTE_HEIGHT + GRID_SPACING) + GRID_MARGIN_TOP;
-      newPositions[note.id] = { x, y };
-    });
-    setGridPositions(newPositions);
-  }, [gridMode, containerSize.width, folderNotes]);
 
   // Save current layout (positions)
   const saveLayout = async () => {
@@ -214,20 +195,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
             />
             <div className={`w-8 h-4 rounded-full transition-colors ${ocdEnabled ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
             <div className={`absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow transform transition ${ocdEnabled ? 'translate-x-4' : ''}`}></div>
-          </div>
-        </label>
-        <span className="text-gray-400">|</span>
-        <label className="inline-flex items-center cursor-pointer">
-          <span className="text-sm mr-1">Auto Align</span>
-          <div className="relative">
-            <input
-              type="checkbox"
-              checked={autoAlign}
-              onChange={() => setAutoAlign(!autoAlign)}
-              className="sr-only"
-            />
-            <div className={`w-8 h-4 rounded-full transition-colors ${autoAlign ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-            <div className={`absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow transform transition ${autoAlign ? 'translate-x-4' : ''}`}></div>
           </div>
         </label>
         <span className="text-gray-400">|</span>
