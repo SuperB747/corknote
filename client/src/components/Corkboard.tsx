@@ -24,6 +24,8 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const GRID_SPACING = 20; // px gap between notes
   const GRID_MARGIN_TOP = 20; // px top margin for first row
   const [gridPositions, setGridPositions] = useState<Record<string,{x:number,y:number}>>({});
+  // Auto Align toggle UI (no logic yet)
+  const [autoAlign, setAutoAlign] = useState(false);
 
   // Reset pan position when switching boards
   useEffect(() => {
@@ -191,20 +193,17 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           </div>
         </label>
         <span className="text-gray-400">|</span>
-        {/* Grid Mode toggle (UI only) */}
         <label className="inline-flex items-center cursor-pointer">
-          <span className="text-sm mr-1">Grid Mode</span>
+          <span className="text-sm mr-1">Auto Align</span>
           <div className="relative">
             <input
               type="checkbox"
-              checked={gridMode}
-              onChange={() => setGridMode(!gridMode)}
+              checked={autoAlign}
+              onChange={() => setAutoAlign(!autoAlign)}
               className="sr-only"
             />
             <div className="w-8 h-4 bg-gray-300 rounded-full"></div>
-            <div
-              className={`absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow transform transition ${gridMode ? 'translate-x-4' : ''}`}
-            ></div>
+            <div className={`absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow transform transition ${autoAlign ? 'translate-x-4' : ''}`}></div>
           </div>
         </label>
         <span className="text-gray-400">|</span>
@@ -217,16 +216,14 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
         ref={corkboardRef}
         className="absolute inset-0"
         style={{
-          cursor: gridMode ? 'default' : (isDragging ? 'grabbing' : 'grab'),
+          cursor: isDragging ? 'grabbing' : 'grab',
           touchAction: 'none'
         }}
       >
         <div 
           className="absolute"
           style={{
-            transform: gridMode
-              ? 'none'
-              : `translate(${viewportPosition.x}px, ${viewportPosition.y}px)`,
+            transform: `translate(${viewportPosition.x}px, ${viewportPosition.y}px)`,
             width: '150%',
             height: '150%',
             minWidth: '100vw',
@@ -238,29 +235,20 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           <div className="absolute inset-0 bg-cork-overlay"></div>
           
           {/* Notes */}
-          {folderNotes.map((note) => {
-            // Determine position: grid or free
-            const pos = gridMode && gridPositions[note.id]
-              ? gridPositions[note.id]
-              : note.position;
-            // Top margin offset when gridMode to keep notes away from header
-            const offsetY = gridMode ? GRID_MARGIN_TOP : 0;
-            return (
-              <Note
-                key={note.id}
-                initialEditing={note.id === newNoteId}
-                note={note}
-                rotation={ocdEnabled ? 0 : note.rotation}
-                stylePosition={{ x: pos.x, y: pos.y + offsetY }}
-                onDragEnd={(_, info) => {
-                  const newX = note.position.x + info.offset.x;
-                  const newY = note.position.y + info.offset.y;
-                  handleDragEnd(note.id, { x: newX, y: newY });
-                }}
-                onNewNoteHandled={onNewNoteHandled}
-              />
-            );
-          })}
+          {folderNotes.map(note => (
+            <Note
+              key={note.id}
+              initialEditing={note.id === newNoteId}
+              note={note}
+              rotation={ocdEnabled ? 0 : note.rotation}
+              onDragEnd={(_, info) => {
+                const newX = note.position.x + info.offset.x;
+                const newY = note.position.y + info.offset.y;
+                handleDragEnd(note.id, { x: newX, y: newY });
+              }}
+              onNewNoteHandled={onNewNoteHandled}
+            />
+          ))}
         </div>
       </div>
       {process.env.NODE_ENV === 'development' && <FirebaseUsageMonitor />}
