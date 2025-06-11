@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { ArrowsRightLeftIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import useNoteStore from '../store/noteStore';
 import Note from './Note';
 import FirebaseUsageMonitor from './FirebaseUsageMonitor';
@@ -18,6 +18,8 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation } = useNoteStore();
   const corkboardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Grid Mode toggle state (UI only)
+  const [gridMode, setGridMode] = useState(false);
   // Reset pan position when switching boards
   useEffect(() => {
     setViewportPosition({ x: 0, y: 0 });
@@ -70,24 +72,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     window.addEventListener('resize', updateSizes);
     return () => window.removeEventListener('resize', updateSizes);
   }, []);
-
-  // Shuffle notes within current viewport bounds
-  const shuffleNotes = () => {
-    const cw = containerSize.width;
-    const ch = containerSize.height;
-    const viewX = -viewportPosition.x;
-    const viewY = -viewportPosition.y;
-    const noteW = NOTE_WIDTH;  // use global constant from Note component
-    const noteH = NOTE_HEIGHT;
-    folderNotes.forEach(note => {
-      const x = viewX + Math.random() * Math.max(0, cw - noteW);
-      const y = viewY + Math.random() * Math.max(0, ch - noteH);
-      updateNotePosition(note.id, { x, y });
-      // generate random rotation between -MAX_ROTATION and +MAX_ROTATION
-      const angle = (Math.random() * 2 - 1) * MAX_ROTATION;
-      updateNoteRotation(note.id, angle);
-    });
-  };
 
   // Save current layout (positions)
   const saveLayout = async () => {
@@ -187,10 +171,22 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           </div>
         </label>
         <span className="text-gray-400">|</span>
-        <button onClick={shuffleNotes} className="flex items-center gap-1 text-sm">
-          <ArrowsRightLeftIcon className="w-5 h-5" />
-          <span>Shuffle Notes</span>
-        </button>
+        {/* Grid Mode toggle (UI only) */}
+        <label className="inline-flex items-center cursor-pointer">
+          <span className="text-sm mr-1">Grid Mode</span>
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={gridMode}
+              onChange={() => setGridMode(!gridMode)}
+              className="sr-only"
+            />
+            <div className="w-8 h-4 bg-gray-300 rounded-full"></div>
+            <div
+              className={`absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow transform transition ${gridMode ? 'translate-x-4' : ''}`}
+            ></div>
+          </div>
+        </label>
         <span className="text-gray-400">|</span>
         <button onClick={saveLayout} disabled={saving} className="flex items-center justify-center gap-1 text-sm min-w-[7rem]">
           <ArrowDownTrayIcon className="w-5 h-5" />
