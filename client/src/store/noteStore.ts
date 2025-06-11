@@ -291,9 +291,12 @@ const useNoteStore = create<NoteStore>((set, get) => {
         if (oldFolderId && notesCache[oldFolderId]) {
           notesCache[oldFolderId] = notesCache[oldFolderId].filter(n => n.id !== noteId);
         }
-        // Switch to new folder
+        // Clear new folder cache to force fresh fetch
+        if (notesCache[newFolderId]) {
+          delete notesCache[newFolderId];
+        }
+        // Switch to new folder and reload its notes
         set({ selectedFolderId: newFolderId });
-        // Reload notes for new folder
         const user = firebaseAuth.currentUser;
         if (user) {
           await get().loadNotes(user.uid, newFolderId);
