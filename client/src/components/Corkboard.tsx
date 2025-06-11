@@ -269,10 +269,11 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               initialEditing={note.id === newNoteId}
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
-              onDragEnd={(_, info) => {
-                const newX = note.position.x + info.offset.x;
-                const newY = note.position.y + info.offset.y;
-                handleDragEnd(note.id, { x: newX, y: newY });
+              onDragEnd={(event, info) => {
+                // Use the absolute drop position for alignment
+                const droppedX = info.point.x;
+                const droppedY = info.point.y;
+                handleDragEnd(note.id, { x: droppedX, y: droppedY });
               }}
               onNewNoteHandled={onNewNoteHandled}
             />
