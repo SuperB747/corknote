@@ -121,8 +121,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
       }
     }
     updateNotePosition(noteId, { x: finalX, y: finalY });
-    // Automatically save layout after moving note
-    saveLayout();
   };
 
   useEffect(() => {
