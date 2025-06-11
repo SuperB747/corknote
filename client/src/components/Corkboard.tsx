@@ -15,7 +15,7 @@ interface CorkboardProps {
   onNewNoteHandled?: () => void;
 }
 const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) => {
-  const { notes, folders, selectedFolderId, setSelectedFolder, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation, moveNoteToFolder } = useNoteStore();
+  const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation, moveNoteToFolder } = useNoteStore();
   const corkboardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   // Reset pan position when switching boards
@@ -167,7 +167,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 overflow-visible"
+      className="absolute inset-0 overflow-hidden"
     >
       {/* Compact floating toolbar */}
       <div className="no-drag absolute top-4 right-4 bg-white/70 backdrop-blur-md rounded-md px-4 py-2 shadow-md flex items-center space-x-2 z-50">
@@ -226,42 +226,20 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               initialEditing={note.id === newNoteId}
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
-              onDragEnd={(event, info) => {
+              onDragEnd={(_, info) => {
                 // update position on board
                 const newX = note.position.x + info.offset.x;
                 const newY = note.position.y + info.offset.y;
                 handleDragEnd(note.id, { x: newX, y: newY });
-                // detect drop onto sidebar folder using event coordinates
-                let x: number, y: number;
-                if ('clientX' in event) {
-                  x = event.clientX;
-                  y = event.clientY;
-                } else if (info.point) {
-                  x = info.point.x;
-                  y = info.point.y;
-                } else {
-                  return;
-                }
-                const elem = document.elementFromPoint(x, y) as HTMLElement | null;
-                const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
-                if (folderElem) {
-                  const newFolderId = folderElem.getAttribute('data-folder-id');
-                  if (newFolderId && newFolderId !== selectedFolderId) {
-                    // move backend and local state
-                    moveNoteToFolder(note.id, newFolderId);
-                    // highlight folder
-                    folderElem.classList.add('bg-blue-100');
-                    setTimeout(() => folderElem.classList.remove('bg-blue-100'), 500);
-                    // animate note
-                    const noteElem = document.getElementById(note.id);
-                    if (noteElem) {
-                      noteElem.animate([
-                        { transform: `translate(${newX - note.position.x}px, ${newY - note.position.y}px)` },
-                        { transform: 'scale(0) translateY(-50%)', opacity: 0 }
-                      ], { duration: 400, easing: 'ease-in' });
+                // detect drop onto sidebar folder
+                if (info.point) {
+                  const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
+                  const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
+                  if (folderElem) {
+                    const newFolderId = folderElem.getAttribute('data-folder-id');
+                    if (newFolderId && newFolderId !== selectedFolderId) {
+                      moveNoteToFolder(note.id, newFolderId);
                     }
-                    // switch folder
-                    setSelectedFolder(newFolderId);
                   }
                 }
               }}
