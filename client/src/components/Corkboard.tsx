@@ -189,6 +189,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               className="sr-only"
             />
             <div className={`w-8 h-4 rounded-full transition-colors ${ocdEnabled ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+            <div className={`absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow transform transition ${ocdEnabled ? 'translate-x-4' : ''}`}></div>
           </div>
         </label>
         <span className="text-gray-400">|</span>
