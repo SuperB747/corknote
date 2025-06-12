@@ -166,7 +166,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
 
   return (
     <div 
-      id="board-container"
       ref={containerRef}
       className="absolute inset-0 overflow-visible"
     >
