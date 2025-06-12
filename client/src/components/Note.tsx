@@ -194,7 +194,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsOverSidebar(false);
         updateNotePosition(note.id, note.position);
       }}
-      onDrag={(e, info) => {
+      onDrag={(e: any, info: any) => {
         const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
         const overFolder = !!elem?.closest('[data-folder-id]');
         setIsOverSidebar(overFolder);
