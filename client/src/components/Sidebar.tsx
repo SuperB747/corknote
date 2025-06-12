@@ -13,6 +13,8 @@ const Sidebar: React.FC = () => {
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
   const [folderToDelete, setFolderToDelete] = useState<{id: string; name: string} | null>(null);
+  const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
+  const isDragging = useNoteStore(state => state.isDragging);
 
   const handleCreateFolder = async () => {
     if (!currentUser || !folderName.trim()) return;
@@ -103,9 +105,13 @@ const Sidebar: React.FC = () => {
             data-folder-id={folder.id}
             value={folder}
             onClick={() => setSelectedFolder(folder.id)}
-            className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
+            onMouseEnter={() => isDragging && setHoveredFolderId(folder.id)}
+            onMouseLeave={() => setHoveredFolderId(null)}
+            className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border transition-all duration-200 ${
               selectedFolderId === folder.id
                 ? 'bg-blue-200 border-blue-400'
+                : hoveredFolderId === folder.id && isDragging
+                ? 'bg-blue-100 border-blue-300 scale-105'
                 : 'border-transparent hover:bg-gray-200 hover:border-gray-350'
             } mb-1`}
           >
