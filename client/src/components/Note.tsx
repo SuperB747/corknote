@@ -153,7 +153,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     onDragEnd?.(event, info);
     // re-pin: new color and re-trigger animation
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
-    setPinKey(k => k + 1);
+    setPinKey((k: number) => k + 1);
   };
 
   return (
@@ -175,6 +175,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
       whileDrag={isOverSidebar ? { scale: 0.3, opacity: 0.3 } : undefined}
       style={{
+        pointerEvents: isOverSidebar ? 'none' : 'auto',
         x: note.position.x,
         y: note.position.y,
         rotate: rotation,
