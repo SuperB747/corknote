@@ -183,15 +183,11 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setDisableHover(true);
       }}
       onMouseLeave={() => {
-        // Only re-enable hover if mouse is not down and not just dragged
-        if (!isMouseDown && !wasDragged) {
-          setDisableHover(false);
-        }
-        // If wasDragged, keep hover disabled until re-enter
-        if (wasDragged) setWasDragged(false);
+        setIsHovered(false);
+        // Do not re-enable hover here after drag; wait for mouse enter
       }}
       onMouseEnter={() => {
-        // Only re-enable hover if mouse is not down and was just dragged
+        // After drag, re-enable hover on re-enter
         if (!isMouseDown && wasDragged) {
           setDisableHover(false);
           setWasDragged(false);
