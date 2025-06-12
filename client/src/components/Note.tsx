@@ -67,6 +67,9 @@ interface NoteProps {
 
 const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
   const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
+  // Global drag state and sidebar hover detection
+  const { setIsNoteDragging } = useNoteStore();
+  const [isOverSidebar, setIsOverSidebar] = useState(false);
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
@@ -179,6 +182,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         rotate: rotation,
         transformOrigin: 'center center',
         zIndex: isDragging ? 10000 : (isHovered ? 9999 : note.zIndex),
+        pointerEvents: isOverSidebar ? 'none' : 'auto',
+        opacity: isOverSidebar ? 0.5 : 1,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
@@ -187,12 +192,20 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       dragMomentum={false}
       onDragStart={() => {
         setIsDragging(true);
+        setIsNoteDragging(true);
         setDisableHover(true);
         setIsHovered(false);
         updateNotePosition(note.id, note.position);
       }}
+      onDrag={(e, info) => {
+        const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
+        const over = !!elem?.closest('[data-sidebar]');
+        setIsOverSidebar(over);
+      }}
       onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
+        setIsNoteDragging(false);
+        setIsOverSidebar(false);
         onDragEnd?.(e, info);
         // After dragging, remain in view mode (don't enter editing)
         // hover will re-enable on mouse leave (handled in onHoverEnd)
