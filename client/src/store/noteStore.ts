@@ -297,12 +297,15 @@ const useNoteStore = create<NoteStore>((set, get) => {
         // Update new folder cache
         const newCache = notesCache[newFolderId] ?? [];
         notesCache[newFolderId] = [...newCache, fetchedNote];
-        // Switch to new folder and display updated cache
-        set({
-          notes: notesCache[newFolderId],
-          selectedFolderId: newFolderId,
-          isLoading: false
-        });
+        // Keep current folder selected and refresh its notes in place
+        if (oldFolderId) {
+          set({
+            notes: notesCache[oldFolderId],
+            isLoading: false
+          });
+        } else {
+          set({ isLoading: false });
+        }
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
       }
