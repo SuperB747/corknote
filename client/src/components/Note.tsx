@@ -190,37 +190,30 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       drag={!isEditing}
       dragMomentum={false}
       onDragStart={(event: any, info: any) => {
+        // Begin drag: compute transform origin based on cursor position
         setIsDragging(true);
         setDragging(true);
         setDisableHover(true);
         setIsHovered(false);
         setIsOverSidebar(false);
-        updateNotePosition(note.id, note.position);
-        // compute pointer position relative to element for scaling origin
         const el = (event.currentTarget as HTMLElement);
         const rect = el.getBoundingClientRect();
         const xPct = ((event.clientX - rect.left) / rect.width) * 100;
         const yPct = ((event.clientY - rect.top) / rect.height) * 100;
         setDragOrigin({ x: xPct, y: yPct });
+        // reset element position tracking
+        updateNotePosition(note.id, note.position);
       }}
       onDrag={(e: any, info: any) => {
         const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-          const rect = sidebar.getBoundingClientRect();
-          const over =
-            info.point.x >= rect.left &&
-            info.point.x <= rect.right &&
-            info.point.y >= rect.top &&
-            info.point.y <= rect.bottom;
-          setIsOverSidebar(over);
-          if (over) {
-            const el = (e.currentTarget as HTMLElement);
-            const elRect = el.getBoundingClientRect();
-            const xPct2 = ((info.point.x - elRect.left) / elRect.width) * 100;
-            const yPct2 = ((info.point.y - elRect.top) / elRect.height) * 100;
-            setDragOrigin({ x: xPct2, y: yPct2 });
-          }
-        }
+        if (!sidebar) return;
+        const rect = sidebar.getBoundingClientRect();
+        const over =
+          info.point.x >= rect.left &&
+          info.point.x <= rect.right &&
+          info.point.y >= rect.top &&
+          info.point.y <= rect.bottom;
+        setIsOverSidebar(over);
       }}
       onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
