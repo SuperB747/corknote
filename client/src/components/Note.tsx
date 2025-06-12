@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Note } from '../store/noteStore';
 import useNoteStore from '../store/noteStore';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
