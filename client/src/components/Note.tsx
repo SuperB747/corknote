@@ -204,8 +204,9 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
             info.point.y >= sidebarEl.getBoundingClientRect().top &&
             info.point.y <= sidebarEl.getBoundingClientRect().bottom
           : false;
-        // when first entering sidebar, snap the small note center under the pointer
-        if (over && !isOverSidebar) {
+        setIsOverSidebar(over);
+        if (over) {
+          // always center the shrunken note under the pointer
           const boardEl = document.getElementById('board-container');
           if (boardEl) {
             const boardRect = boardEl.getBoundingClientRect();
@@ -219,7 +220,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
             updateNotePosition(note.id, { x: newX, y: newY });
           }
         }
-        setIsOverSidebar(over);
       }}
       onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
