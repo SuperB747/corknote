@@ -13,6 +13,7 @@ const Sidebar: React.FC = () => {
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
   const [folderToDelete, setFolderToDelete] = useState<{id: string; name: string} | null>(null);
+  const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
 
   const handleCreateFolder = async () => {
     if (!currentUser || !folderName.trim()) return;
@@ -96,16 +97,19 @@ const Sidebar: React.FC = () => {
         </div>
       )}
 
-      <Reorder.Group initial={false} axis="y" values={folders} onReorder={reorderFolders} className="space-y-2 flex-1 overflow-y-auto overscroll-contain scrollbar-container">
+      <Reorder.Group axis="y" values={folders} onReorder={reorderFolders} className="flex-1">
         {folders.map((folder) => (
-          <Reorder.Item initial={false}
+          <Reorder.Item
             key={folder.id}
-            data-folder-id={folder.id}
             value={folder}
-            onClick={() => setSelectedFolder(folder.id)}
+            data-folder-id={folder.id}
+            onMouseEnter={() => setHoveredFolderId(folder.id)}
+            onMouseLeave={() => setHoveredFolderId(null)}
             className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
               selectedFolderId === folder.id
                 ? 'bg-blue-200 border-blue-400'
+                : hoveredFolderId === folder.id
+                ? 'bg-blue-100 border-blue-300 transform scale-105 transition-transform duration-200'
                 : 'border-transparent hover:bg-gray-200 hover:border-gray-350'
             } mb-1`}
           >
