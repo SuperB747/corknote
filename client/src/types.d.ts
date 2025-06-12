@@ -10,4 +10,8 @@ declare module 'react-router-dom' {
 declare module 'framer-motion' {
   export const motion: any;
   export const Reorder: any;
-} 
+}
+
+declare module 'react-quill';
+declare module '@heroicons/react/24/outline';
+declare module '@heroicons/react/24/solid'; 
