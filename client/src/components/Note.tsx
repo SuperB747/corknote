@@ -196,16 +196,30 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         updateNotePosition(note.id, note.position);
       }}
       onDrag={(e: any, info: any) => {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-          const rect = sidebar.getBoundingClientRect();
-          const over =
-            info.point.x >= rect.left &&
-            info.point.x <= rect.right &&
-            info.point.y >= rect.top &&
-            info.point.y <= rect.bottom;
-          setIsOverSidebar(over);
+        // detect if pointer is over the sidebar
+        const sidebarEl = document.getElementById('sidebar');
+        const over = sidebarEl
+          ? info.point.x >= sidebarEl.getBoundingClientRect().left &&
+            info.point.x <= sidebarEl.getBoundingClientRect().right &&
+            info.point.y >= sidebarEl.getBoundingClientRect().top &&
+            info.point.y <= sidebarEl.getBoundingClientRect().bottom
+          : false;
+        // when first entering sidebar, snap the small note center under the pointer
+        if (over && !isOverSidebar) {
+          const boardEl = document.getElementById('board-container');
+          if (boardEl) {
+            const boardRect = boardEl.getBoundingClientRect();
+            const boardX = info.point.x - boardRect.left;
+            const boardY = info.point.y - boardRect.top;
+            const scale = 0.3;
+            const width = isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width;
+            const height = isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height;
+            const newX = boardX - (width * scale) / 2;
+            const newY = boardY - (height * scale) / 2;
+            updateNotePosition(note.id, { x: newX, y: newY });
+          }
         }
+        setIsOverSidebar(over);
       }}
       onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
