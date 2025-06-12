@@ -121,6 +121,9 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const handleNoteDragEnd = async (noteId: string, info: any) => {
     const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
     const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
+    const currentNote = notes.find(n => n.id === noteId);
+    
+    if (!currentNote) return;
     
     if (folderElem) {
       const newFolderId = folderElem.getAttribute('data-folder-id');
@@ -132,8 +135,8 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
       }
     } else {
       // If not dropped on a folder, update position on board
-      const newX = note.position.x + info.offset.x;
-      const newY = note.position.y + info.offset.y;
+      const newX = currentNote.position.x + info.offset.x;
+      const newY = currentNote.position.y + info.offset.y;
       handleDragEnd(noteId, { x: newX, y: newY });
     }
     
