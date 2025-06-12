@@ -48,9 +48,9 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div id="sidebar" className="relative z-20 w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-full">
+    <div id="sidebar" className="relative z-20 w-64 bg-amber-50 border-r border-amber-200 p-4 flex flex-col h-full shadow-xl">
       {currentUser && (
-        <div className="mb-6 p-3 bg-blue-300 rounded-lg text-sm">
+        <div className="mb-6 p-3 bg-amber-200 rounded-lg text-amber-800 text-sm border border-amber-300 shadow-md">
           <UserProfile user={currentUser} />
         </div>
       )}
@@ -61,7 +61,7 @@ const Sidebar: React.FC = () => {
             setIsCreatingFolder(true);
             setFolderName('');
           }}
-          className="text-sm font-semibold text-gray-800 cursor-pointer"
+          className="text-sm font-semibold text-amber-800 cursor-pointer hover:text-amber-700"
         >
           Add New Board
         </h2>
@@ -70,7 +70,7 @@ const Sidebar: React.FC = () => {
             setIsCreatingFolder(true);
             setFolderName('');
           }}
-          className="p-1 hover:bg-gray-100 rounded-full"
+          className="p-1 hover:bg-amber-100 rounded-full"
         >
           <PlusIcon className="w-4 h-4 text-gray-600" />
         </button>
@@ -105,8 +105,8 @@ const Sidebar: React.FC = () => {
             onClick={() => setSelectedFolder(folder.id)}
             className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
               selectedFolderId === folder.id
-                ? 'bg-blue-200 border-blue-400'
-                : 'border-transparent hover:bg-gray-200 hover:border-gray-350'
+                ? 'bg-amber-300 border-amber-600 text-amber-800 font-semibold'
+                : 'border-transparent hover:bg-amber-100 hover:border-amber-400 hover:text-amber-700 font-medium'
             } mb-1`}
           >
             {isEditingFolder === folder.id ? (
