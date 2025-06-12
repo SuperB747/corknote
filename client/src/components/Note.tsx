@@ -66,6 +66,7 @@ interface NoteProps {
 
 const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
   const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
+  const setDragging = useNoteStore(state => state.setDragging);
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
@@ -147,6 +148,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
 
   const handleDragEnd = (event: any, info: any) => {
     setIsDragging(false);
+    setDragging(false);
     onDragEnd?.(event, info);
     // re-pin: new color and re-trigger animation
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
@@ -184,12 +186,14 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       dragMomentum={false}
       onDragStart={() => {
         setIsDragging(true);
+        setDragging(true);
         setDisableHover(true);
         setIsHovered(false);
         updateNotePosition(note.id, note.position);
       }}
       onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
+        setDragging(false);
         onDragEnd?.(e, info);
         // After dragging, remain in view mode (don't enter editing)
         // hover will re-enable on mouse leave (handled in onHoverEnd)

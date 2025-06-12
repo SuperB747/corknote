@@ -35,6 +35,8 @@ interface NoteStore {
   unsavedChanges: boolean;
   isLoading: boolean;
   error: string | null;
+  isDragging: boolean;
+  setDragging: (value: boolean) => void;
 
   // Folder actions
   loadFolders: (userId: string) => Promise<void>;
@@ -77,6 +79,8 @@ const useNoteStore = create<NoteStore>((set, get) => {
     unsavedChanges: false,
     isLoading: false,
     error: null,
+    isDragging: false,
+    setDragging: (value: boolean) => set({ isDragging: value }),
 
     // Folder actions
     loadFolders: async (userId: string) => {

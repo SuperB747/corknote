@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
 
   if (!isLoading && folders.length === 0) {
     return (
-      <div className="h-full relative overflow-hidden">
+      <div className="h-full relative overflow-visible">
         {/* Corkboard background */}
         <div className="absolute inset-0 bg-cork bg-repeat"></div>
         <div className="absolute inset-0 bg-cork-overlay"></div>
@@ -88,7 +88,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden">
+    <div className="h-full flex flex-col relative overflow-visible">
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 m-4 rounded absolute top-0 left-0 right-0 z-50">
           {error}
