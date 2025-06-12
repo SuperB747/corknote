@@ -179,7 +179,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         x: note.position.x,
         y: note.position.y,
         rotate: rotation,
-        transformOrigin: isOverSidebar ? 'left center' : 'center center',
+        transformOrigin: 'center center',
         zIndex: isHovered ? 9999 : note.zIndex,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
