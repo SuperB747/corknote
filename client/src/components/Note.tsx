@@ -74,7 +74,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [disableHover, setDisableHover] = useState(false);
-  const [isOverSidebar, setIsOverSidebar] = useState(false);
   // S, M, L size selection
   const defaultSize = note.sizeCategory as 'S'|'M'|'L';
   const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(defaultSize);
@@ -148,8 +147,12 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   };
 
   const handleDragEnd = (event: any, info: any) => {
+    // End drag: reset hover lock and transformOrigin
     setIsDragging(false);
     setDragging(false);
+    setDisableHover(false);
+    const el = (event.currentTarget as HTMLElement);
+    el.style.transformOrigin = '';
     onDragEnd?.(event, info);
     // re-pin: new color and re-trigger animation
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
@@ -173,9 +176,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsHovered(false);
       }}
       whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
-      whileDrag={isOverSidebar ? { scale: 0.3, opacity: 0.3 } : undefined}
       style={{
-        pointerEvents: isOverSidebar ? 'none' : 'auto',
+        pointerEvents: /*isOverSidebar ? 'none' :*/ 'auto',
         x: note.position.x,
         y: note.position.y,
         rotate: rotation,
@@ -188,31 +190,14 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       dragMomentum={false}
       onDragStart={(event: any, info: any) => {
         // Compute and set transformOrigin so scaling pivots under cursor
+        setDisableHover(true);
         const el = (event.currentTarget as HTMLElement);
         const rect = el.getBoundingClientRect();
         const xPct = ((info.point.x - rect.left) / rect.width) * 100;
         const yPct = ((info.point.y - rect.top) / rect.height) * 100;
         el.style.transformOrigin = `${xPct}% ${yPct}%`;
       }}
-      onDrag={(e: any, info: any) => {
-        const sidebar = document.getElementById('sidebar');
-        if (!sidebar) return;
-        const rect = sidebar.getBoundingClientRect();
-        const over =
-          info.point.x >= rect.left &&
-          info.point.x <= rect.right &&
-          info.point.y >= rect.top &&
-          info.point.y <= rect.bottom;
-        setIsOverSidebar(over);
-      }}
-      onDragEnd={(e: any, info: any) => {
-        // Reset transformOrigin and sidebar state on drop
-        const el = (e.currentTarget as HTMLElement);
-        el.style.transformOrigin = '';
-        setIsOverSidebar(false);
-        onDragEnd?.(e, info);
-        // After dragging, remain in view mode (don't enter editing)
-      }}
+      onDragEnd={handleDragEnd}
     >
       {/* Pin animation: hide while dragging, show on drop with random color */}
       {!isDragging && (
