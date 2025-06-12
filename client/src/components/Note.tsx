@@ -164,17 +164,16 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
       onHoverStart={() => {
         if (isEditing) return;
-        // Only enable hover if not dragging and not disabled
         if (!disableHover) setIsHovered(true);
       }}
       onHoverEnd={() => {
         setIsHovered(false);
       }}
+      onMouseDown={() => {
+        setDisableHover(true);
+      }}
       onMouseLeave={() => {
         setDisableHover(false);
-      }}
-      onMouseEnter={() => {
-        if (!isDragging) setDisableHover(false);
       }}
       whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
       style={{
@@ -189,15 +188,12 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       drag={!isEditing}
       dragMomentum={false}
-      // Set dragging flags on drag start
       onDragStart={(e: any, info: any) => {
         setIsDragging(true);
         setDragging(true);
-        setDisableHover(true);
       }}
       onDragEnd={(e: any, info: any) => {
         handleDragEnd(e, info);
-        // Keep disableHover true until mouse leaves and re-enters
       }}
     >
       {/* Pin animation: hide while dragging, show on drop with random color */}
