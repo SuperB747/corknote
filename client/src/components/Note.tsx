@@ -66,7 +66,7 @@ interface NoteProps {
 }
 
 const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
-  const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
+  const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation, setOverFolderId } = useNoteStore();
   // Global drag state and sidebar hover detection
   const { setIsNoteDragging } = useNoteStore();
   const [isOverSidebar, setIsOverSidebar] = useState(false);
@@ -198,14 +198,24 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         updateNotePosition(note.id, note.position);
       }}
       onDrag={(e, info) => {
-        const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
-        const over = !!elem?.closest('[data-sidebar]');
-        setIsOverSidebar(over);
+        const { x, y } = info.point;
+        const elem = document.elementFromPoint(x, y) as HTMLElement | null;
+        // detect if over a specific folder
+        const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
+        if (folderElem) {
+          const folderId = folderElem.getAttribute('data-folder-id');
+          setIsOverSidebar(true);
+          setOverFolderId(folderId);
+        } else {
+          setIsOverSidebar(false);
+          setOverFolderId(null);
+        }
       }}
       onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
         setIsNoteDragging(false);
         setIsOverSidebar(false);
+        setOverFolderId(null);
         onDragEnd?.(e, info);
         // After dragging, remain in view mode (don't enter editing)
         // hover will re-enable on mouse leave (handled in onHoverEnd)

@@ -8,7 +8,7 @@ import { UserProfile } from './UserProfile';
 
 const Sidebar: React.FC = () => {
   const { currentUser } = useAuth();
-  const { folders, selectedFolderId, setSelectedFolder, createFolder, updateFolder, deleteFolder, reorderFolders } = useNoteStore();
+  const { folders, selectedFolderId, setSelectedFolder, createFolder, updateFolder, deleteFolder, reorderFolders, isNoteDragging, overFolderId } = useNoteStore();
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
@@ -97,55 +97,61 @@ const Sidebar: React.FC = () => {
       )}
 
       <Reorder.Group initial={false} axis="y" values={folders} onReorder={reorderFolders} className="space-y-2 flex-1 overflow-y-auto overscroll-contain scrollbar-container">
-        {folders.map((folder) => (
-          <Reorder.Item initial={false}
-            key={folder.id}
-            data-folder-id={folder.id}
-            value={folder}
-            onClick={() => setSelectedFolder(folder.id)}
-            className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
-              selectedFolderId === folder.id
-                ? 'bg-blue-200 border-blue-400'
-                : 'border-transparent hover:bg-gray-200 hover:border-gray-350'
-            } mb-1`}
-          >
-            {isEditingFolder === folder.id ? (
-              <input
-                type="text"
-                value={folderName}
-                onChange={(e) => setFolderName(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleUpdateFolder(folder.id)}
-                onBlur={() => handleUpdateFolder(folder.id)}
-                className="flex-1 px-2 py-1 border rounded-md"
-                autoFocus
-              />
-            ) : (
-              <>
-                <button
-                  onClick={() => setSelectedFolder(folder.id)}
-                  className="flex items-center justify-start flex-1 pl-2 text-gray-700 min-w-0"
-                >
-                  <FolderIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                  <span className="flex-1 min-w-0 truncate text-left">{folder.name}</span>
-                </button>
-                <div className="flex pr-2">
+        {folders.map((folder) => {
+          const isHighlighted = isNoteDragging && overFolderId === folder.id;
+          return (
+            <Reorder.Item
+              data-folder-id={folder.id}
+              initial={false}
+              key={folder.id}
+              value={folder}
+              onClick={() => setSelectedFolder(folder.id)}
+              className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
+                selectedFolderId === folder.id
+                  ? 'bg-blue-200 border-blue-400'
+                  : isHighlighted
+                    ? 'bg-green-100 border-green-400'
+                    : 'border-transparent hover:bg-gray-200 hover:border-gray-350'
+              } mb-1`}
+            >
+              {isEditingFolder === folder.id ? (
+                <input
+                  type="text"
+                  value={folderName}
+                  onChange={(e) => setFolderName(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleUpdateFolder(folder.id)}
+                  onBlur={() => handleUpdateFolder(folder.id)}
+                  className="flex-1 px-2 py-1 border rounded-md"
+                  autoFocus
+                />
+              ) : (
+                <>
                   <button
-                    onClick={(e) => { e.stopPropagation(); startEditing(folder); }}
-                    className="p-1 hover:bg-gray-200 rounded-full"
+                    onClick={() => setSelectedFolder(folder.id)}
+                    className="flex items-center justify-start flex-1 pl-2 text-gray-700 min-w-0"
                   >
-                    <PencilIcon className="w-4 h-4 text-gray-500" />
+                    <FolderIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                    <span className="flex-1 min-w-0 truncate text-left">{folder.name}</span>
                   </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder); }}
-                    className="p-1 hover:bg-gray-200 rounded-full"
-                  >
-                    <TrashIcon className="w-4 h-4 text-gray-500" />
-                  </button>
-                </div>
-              </>
-            )}
-          </Reorder.Item>
-        ))}
+                  <div className="flex pr-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); startEditing(folder); }}
+                      className="p-1 hover:bg-gray-200 rounded-full"
+                    >
+                      <PencilIcon className="w-4 h-4 text-gray-500" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder); }}
+                      className="p-1 hover:bg-gray-200 rounded-full"
+                    >
+                      <TrashIcon className="w-4 h-4 text-gray-500" />
+                    </button>
+                  </div>
+                </>
+              )}
+            </Reorder.Item>
+          );
+        })}
       </Reorder.Group>
 
       {folderToDelete && (
