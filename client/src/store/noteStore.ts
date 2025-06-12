@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import * as noteService from '../services/noteService';
 import * as folderService from '../services/folderService';
 import { firebaseAuth } from '../firebase/config';
+import { getNoteById } from '../services/noteService';
 
 export interface Note {
   id: string;
@@ -288,33 +289,27 @@ const useNoteStore = create<NoteStore>((set, get) => {
         const beforeCache = notesCache[newFolderId] ?? [];
         const maxZ = beforeCache.reduce((max, n) => Math.max(max, n.zIndex), 0);
         const newZ = maxZ + 1;
-        // Remove note from old folder cache and capture moved note
+        // Update Firestore with new folderId and metadata
+        await noteService.moveNoteToFolder(noteId, newFolderId, position, angle, newZ);
+        // Remove note from old folder cache
         const oldFolderId = get().selectedFolderId;
-        let movedNote;
         if (oldFolderId && notesCache[oldFolderId]) {
-          const currentNotes = notesCache[oldFolderId];
-          movedNote = currentNotes.find(n => n.id === noteId);
-          notesCache[oldFolderId] = currentNotes.filter(n => n.id !== noteId);
+          notesCache[oldFolderId] = notesCache[oldFolderId].filter(n => n.id !== noteId);
         }
-        // Update cache for new folder using local moved note
-        if (movedNote) {
-          const updatedNote = {
-            ...movedNote,
-            folderId: newFolderId,
-            position: position ?? movedNote.position,
-            rotation: angle,
-            zIndex: newZ,
-            updatedAt: new Date(),
-          };
-          const existingNewCache = notesCache[newFolderId] ?? [];
-          notesCache[newFolderId] = [...existingNewCache, updatedNote];
+        // Fetch only the moved note from Firestore
+        const fetchedNote = await getNoteById(noteId);
+        // Update new folder cache
+        const newCache = notesCache[newFolderId] ?? [];
+        notesCache[newFolderId] = [...newCache, fetchedNote];
+        // Keep current folder selected and refresh its notes in place
+        if (oldFolderId) {
+          set({
+            notes: notesCache[oldFolderId],
+            isLoading: false
+          });
+        } else {
+          set({ isLoading: false });
         }
-        // Switch view to the new folder and show its notes from cache
-        set({
-          selectedFolderId: newFolderId,
-          notes: notesCache[newFolderId],
-          isLoading: false
-        });
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
       }
