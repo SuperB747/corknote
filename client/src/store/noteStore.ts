@@ -36,9 +36,7 @@ interface NoteStore {
   isLoading: boolean;
   error: string | null;
   isNoteDragging: boolean;
-  overFolderId: string | null;
   setIsNoteDragging: (value: boolean) => void;
-  setOverFolderId: (folderId: string | null) => void;
 
   // Folder actions
   loadFolders: (userId: string) => Promise<void>;
@@ -82,9 +80,7 @@ const useNoteStore = create<NoteStore>((set, get) => {
     isLoading: false,
     error: null,
     isNoteDragging: false,
-    overFolderId: null,
     setIsNoteDragging: (value: boolean) => set({ isNoteDragging: value }),
-    setOverFolderId: (folderId: string | null) => set({ overFolderId: folderId }),
 
     // Folder actions
     loadFolders: async (userId: string) => {

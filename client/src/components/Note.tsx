@@ -66,10 +66,8 @@ interface NoteProps {
 }
 
 const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
-  const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation, setOverFolderId } = useNoteStore();
-  // Global drag state and sidebar hover detection
+  const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
   const { setIsNoteDragging } = useNoteStore();
-  const [isOverSidebar, setIsOverSidebar] = useState(false);
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
@@ -182,8 +180,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         rotate: rotation,
         transformOrigin: 'center center',
         zIndex: isDragging ? 10000 : (isHovered ? 9999 : note.zIndex),
-        pointerEvents: isOverSidebar ? 'none' : 'auto',
-        opacity: isOverSidebar ? 0.5 : 1,
+        pointerEvents: isDragging ? 'none' : 'auto',
+        opacity: isDragging ? 0.5 : 1,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
@@ -197,28 +195,10 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsHovered(false);
         updateNotePosition(note.id, note.position);
       }}
-      onDrag={(e, info) => {
-        const { x, y } = info.point;
-        const elem = document.elementFromPoint(x, y) as HTMLElement | null;
-        // detect if over a specific folder
-        const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
-        if (folderElem) {
-          const folderId = folderElem.getAttribute('data-folder-id');
-          setIsOverSidebar(true);
-          setOverFolderId(folderId);
-        } else {
-          setIsOverSidebar(false);
-          setOverFolderId(null);
-        }
-      }}
       onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
         setIsNoteDragging(false);
-        setIsOverSidebar(false);
-        setOverFolderId(null);
         onDragEnd?.(e, info);
-        // After dragging, remain in view mode (don't enter editing)
-        // hover will re-enable on mouse leave (handled in onHoverEnd)
       }}
     >
       {/* Pin animation: hide while dragging, show on drop with random color */}
