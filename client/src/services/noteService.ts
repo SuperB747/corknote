@@ -170,25 +170,6 @@ export const moveNoteToFolder = async (
   await updateDoc(noteRef, updateData);
 };
 
-export const moveNote = async (
-  noteId: string,
-  newFolderId: string,
-  position: { x: number; y: number },
-  rotation: number
-): Promise<void> => {
-  const noteRef = doc(db, 'notes', noteId);
-  const updateData = {
-    folderId: newFolderId,
-    position,
-    rotation,
-    updatedAt: serverTimestamp(),
-  };
-  
-  await updateDoc(noteRef, updateData);
-  incrWrite();
-  incrBytesWritten(JSON.stringify(updateData).length);
-};
-
 /**
  * Fetch a single note by its ID from Firestore.
  */

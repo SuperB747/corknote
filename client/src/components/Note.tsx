@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-// @ts-ignore
 import { motion } from 'framer-motion';
 import { Note } from '../store/noteStore';
 import useNoteStore from '../store/noteStore';
@@ -57,34 +56,15 @@ const MAX_ROTATION = 5;
 // possible pin colors
 const pinColors = ['#e53e3e', '#d69e2e', '#38a169', '#3182ce', '#805ad5', '#d53f8c'];
 
-interface DragInfo {
-  point: { x: number; y: number };
-  offset?: { x: number; y: number };
-}
-
 interface NoteProps {
   note: Note;
-  rotation?: number;
+  rotation?: number;  // rotation angle in degrees
   initialEditing?: boolean;
   onNewNoteHandled?: () => void;
-  onDragEnd?: (event: React.MouseEvent | React.TouchEvent | PointerEvent, info: DragInfo) => void;
-  onDragStart?: () => void;
-  onDragStateChange?: (isDraggingToFolder: boolean) => void;
-  isDraggingToFolder?: boolean;
-  targetFolderId?: string | null;
+  onDragEnd?: (event: any, info: any) => void;
 }
 
-const NoteComponent: React.FC<NoteProps> = ({ 
-  note, 
-  rotation = 0, 
-  initialEditing = false, 
-  onDragEnd, 
-  onDragStart,
-  onDragStateChange,
-  onNewNoteHandled,
-  isDraggingToFolder = false,
-  targetFolderId = null
-}) => {
+const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
   const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
   const setDragging = useNoteStore(state => state.setDragging);
   const [isEditing, setIsEditing] = useState(initialEditing);
@@ -94,8 +74,7 @@ const NoteComponent: React.FC<NoteProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [disableHover, setDisableHover] = useState(false);
-  const [wasDragged, setWasDragged] = useState(false);
-  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const [isOverSidebar, setIsOverSidebar] = useState(false);
   // S, M, L size selection
   const defaultSize = note.sizeCategory as 'S'|'M'|'L';
   const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(defaultSize);
@@ -109,7 +88,6 @@ const NoteComponent: React.FC<NoteProps> = ({
   // Ref & state for detecting overflow in view mode
   const contentRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
-  const [isMouseDown, setIsMouseDown] = useState(false);
 
   // when entering edit mode, reset selectedSize to current note size
   useEffect(() => {
@@ -151,13 +129,6 @@ const NoteComponent: React.FC<NoteProps> = ({
     }
   }, [note.content]);
 
-  // Listen for mouseup anywhere to reset isMouseDown
-  useEffect(() => {
-    const handleUp = () => setIsMouseDown(false);
-    window.addEventListener('mouseup', handleUp);
-    return () => window.removeEventListener('mouseup', handleUp);
-  }, []);
-
   const handleSave = () => {
     // apply selected note size
     updateNoteSize(note.id, selectedSize);
@@ -176,82 +147,72 @@ const NoteComponent: React.FC<NoteProps> = ({
     setShowDeleteConfirm(true);
   };
 
-  const handleDragStart = (event: React.MouseEvent | React.TouchEvent | PointerEvent, info: DragInfo) => {
-    setIsDragging(true);
-    setDragging(true);
-    onDragStart?.();
-  };
-
-  const handleDrag = (event: React.MouseEvent | React.TouchEvent | PointerEvent, info: DragInfo) => {
-    setDragPosition({ x: info.point.x, y: info.point.y });
-    
-    // Check if we're over the sidebar
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) {
-      const sidebarRect = sidebar.getBoundingClientRect();
-      const isOverSidebar = info.point.x <= sidebarRect.right;
-      if (isOverSidebar !== isDraggingToFolder) {
-        onDragStateChange?.(isOverSidebar);
-      }
-
-      // If over sidebar, check for folder hover
-      if (isOverSidebar) {
-        const elemUnderPointer = document.elementFromPoint(info.point.x, info.point.y);
-        const folderItem = elemUnderPointer?.closest('[data-folder-id]');
-        if (folderItem) {
-          // Manually trigger mouseenter on the folder
-          const enterEvent = new MouseEvent('mouseenter', {
-            bubbles: true,
-            cancelable: true,
-            view: window
-          });
-          folderItem.dispatchEvent(enterEvent);
-        }
-      }
-    }
+  const handleDragEnd = (event: any, info: any) => {
+    setIsDragging(false);
+    setDragging(false);
+    onDragEnd?.(event, info);
+    // re-pin: new color and re-trigger animation
+    setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
+    setPinKey((k: number) => k + 1);
   };
 
   return (
     <motion.div
-      transition={{ 
-        default: { duration: 0.2 },
-        scale: { duration: 0.2 },
-        opacity: { duration: 0.2 }
-      }}
+      transition={{ default: { duration: 0 } }}
       initial={false}
-      animate={{
-        scale: isDraggingToFolder ? 0.7 : isHovered ? 1.15 : 1,
-        opacity: isDraggingToFolder ? 0.6 : 1,
+      className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
+      onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
+      onHoverStart={() => {
+        if (isEditing) return;
+        if (disableHover) {
+          setDisableHover(false);
+        }
+        setIsHovered(true);
+      }}
+      onHoverEnd={() => {
+        setIsHovered(false);
+      }}
+      whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
+      whileDrag={isOverSidebar ? { scale: 0.3, opacity: 0.3 } : undefined}
+      style={{
+        pointerEvents: isOverSidebar ? 'none' : 'auto',
         x: note.position.x,
         y: note.position.y,
         rotate: rotation,
-      }}
-      exit={targetFolderId ? {
-        scale: 0.3,
-        opacity: 0,
-        transition: { duration: 0.3 }
-      } : undefined}
-      className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
-      style={{
-        pointerEvents: isDragging ? 'none' : 'auto',
-        zIndex: isHovered || isDragging ? 9999 : note.zIndex,
+        transformOrigin: isOverSidebar ? 'left center' : 'center center',
+        zIndex: isHovered ? 9999 : note.zIndex,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
-        touchAction: 'none',
-        userSelect: 'none',
       }}
       drag={!isEditing}
       dragMomentum={false}
-      dragConstraints={{ left: 0, top: 0, right: 0, bottom: 0 }}
-      dragElastic={1}
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={(e: React.MouseEvent | React.TouchEvent | PointerEvent, info: DragInfo) => {
+      onDragStart={() => {
+        setIsDragging(true);
+        setDragging(true);
+        setDisableHover(true);
+        setIsHovered(false);
+        setIsOverSidebar(false);
+        updateNotePosition(note.id, note.position);
+      }}
+      onDrag={(e: any, info: any) => {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+          const rect = sidebar.getBoundingClientRect();
+          const over =
+            info.point.x >= rect.left &&
+            info.point.x <= rect.right &&
+            info.point.y >= rect.top &&
+            info.point.y <= rect.bottom;
+          setIsOverSidebar(over);
+        }
+      }}
+      onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
         setDragging(false);
-        setWasDragged(true);
+        setIsOverSidebar(false);
         onDragEnd?.(e, info);
+        // After dragging, remain in view mode (don't enter editing)
       }}
     >
       {/* Pin animation: hide while dragging, show on drop with random color */}

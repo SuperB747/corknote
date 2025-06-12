@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 // @ts-ignore
 import { motion, Reorder } from 'framer-motion';
 import useNoteStore from '../store/noteStore';
@@ -13,34 +13,6 @@ const Sidebar: React.FC = () => {
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
   const [folderToDelete, setFolderToDelete] = useState<{id: string; name: string} | null>(null);
-  const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
-  const isDragging = useNoteStore(state => state.isDragging);
-
-  useEffect(() => {
-    if (!isDragging) {
-      setHoveredFolderId(null);
-      return;
-    }
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-
-      const elemUnderPointer = document.elementFromPoint(e.clientX, e.clientY);
-      const folderItem = elemUnderPointer?.closest('[data-folder-id]') as HTMLElement | null;
-      
-      if (folderItem) {
-        const folderId = folderItem.getAttribute('data-folder-id');
-        setHoveredFolderId(folderId);
-      } else {
-        setHoveredFolderId(null);
-      }
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [isDragging]);
 
   const handleCreateFolder = async () => {
     if (!currentUser || !folderName.trim()) return;
@@ -131,17 +103,11 @@ const Sidebar: React.FC = () => {
             data-folder-id={folder.id}
             value={folder}
             onClick={() => setSelectedFolder(folder.id)}
-            className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border transition-all duration-200 ${
+            className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
               selectedFolderId === folder.id
                 ? 'bg-blue-200 border-blue-400'
-                : hoveredFolderId === folder.id && isDragging
-                ? 'bg-blue-100 border-blue-300 scale-105 shadow-lg'
-                : 'border-transparent hover:bg-gray-100'
-            } ${
-              hoveredFolderId === folder.id && isDragging
-              ? 'ring-2 ring-blue-400 ring-opacity-50'
-              : ''
-            }`}
+                : 'border-transparent hover:bg-gray-200 hover:border-gray-350'
+            } mb-1`}
           >
             {isEditingFolder === folder.id ? (
               <input
@@ -157,13 +123,9 @@ const Sidebar: React.FC = () => {
               <>
                 <button
                   onClick={() => setSelectedFolder(folder.id)}
-                  className={`flex items-center justify-start flex-1 pl-2 text-gray-700 min-w-0 ${
-                    hoveredFolderId === folder.id && isDragging ? 'text-blue-600' : ''
-                  }`}
+                  className="flex items-center justify-start flex-1 pl-2 text-gray-700 min-w-0"
                 >
-                  <FolderIcon className={`w-5 h-5 mr-2 flex-shrink-0 transition-colors duration-200 ${
-                    hoveredFolderId === folder.id && isDragging ? 'text-blue-500' : 'text-gray-400'
-                  }`} />
+                  <FolderIcon className="w-5 h-5 mr-2 flex-shrink-0" />
                   <span className="flex-1 min-w-0 truncate text-left">{folder.name}</span>
                 </button>
                 <div className="flex pr-2">

@@ -277,42 +277,35 @@ const useNoteStore = create<NoteStore>((set, get) => {
       }));
     },
 
-    moveNoteToFolder: async (noteId: string, newFolderId: string, position?: { x: number; y: number }) => {
+    moveNoteToFolder: async (
+      noteId: string,
+      newFolderId: string,
+      position?: { x: number; y: number }
+    ) => {
       try {
         set({ isLoading: true, error: null });
-        const { notes, selectedFolderId } = get();
-        const note = notes.find(n => n.id === noteId);
-        
-        if (!note) throw new Error('Note not found');
-
-        // If position not provided, use center of viewport
-        const newPosition = position || { x: 0, y: 0 };
-        
-        // Add random rotation when moving to new folder
-        const newRotation = (Math.random() * 2 - 1) * MAX_ROTATION_ON_MOVE;
-        
-        // Update note in database
-        await noteService.moveNote(noteId, newFolderId, newPosition, newRotation);
-        
-        // Update local state
-        set(state => {
-          // Remove note from current folder's cache and state
-          const updatedNotes = state.notes.filter(n => n.id !== noteId);
-          if (selectedFolderId) {
-            notesCache[selectedFolderId] = updatedNotes;
-          }
-          
-          // Force reload of target folder's notes next time it's opened
-          delete notesCache[newFolderId];
-          
-          return { 
-            notes: updatedNotes,
-            isLoading: false 
-          };
-        });
+        // Compute random rotation and zIndex for new folder
+        const angle = (Math.random() * 2 - 1) * MAX_ROTATION_ON_MOVE;
+        const beforeCache = notesCache[newFolderId] ?? [];
+        const maxZ = beforeCache.reduce((max, n) => Math.max(max, n.zIndex), 0);
+        const newZ = maxZ + 1;
+        // Update Firestore with new folderId and metadata
+        await noteService.moveNoteToFolder(noteId, newFolderId, position, angle, newZ);
+        // Remove note from old folder cache
+        const oldFolderId = get().selectedFolderId;
+        if (oldFolderId && notesCache[oldFolderId]) {
+          notesCache[oldFolderId] = notesCache[oldFolderId].filter(n => n.id !== noteId);
+        }
+        // Clear cache for new folder so full data will be fetched from Firestore on next load
+        delete notesCache[newFolderId];
+        // Refresh current (old) folder notes
+        if (oldFolderId) {
+          set({ notes: notesCache[oldFolderId], isLoading: false });
+        } else {
+          set({ isLoading: false });
+        }
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
-        throw error;
       }
     },
 

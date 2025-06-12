@@ -33,9 +33,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const [saved, setSaved] = useState(false);
   // OCD toggle: when true, notes are not rotated
   const [ocdOn, setOcdOn] = useState(false);
-  const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
-  const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
-  const [isDraggingToFolder, setIsDraggingToFolder] = useState(false);
 
   const folderNotes = notes.filter(note => note.folderId === selectedFolderId);
   const currentFolder = folders.find(f => f.id === selectedFolderId);
@@ -113,41 +110,6 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     const clampedX = Math.min(boardSize.width - NOTE_WIDTH, Math.max(0, position.x));
     const clampedY = Math.min(boardSize.height - NOTE_HEIGHT, Math.max(0, position.y));
     updateNotePosition(noteId, { x: clampedX, y: clampedY });
-  };
-
-  const handleNoteDragStart = (noteId: string) => {
-    setDraggingNoteId(noteId);
-  };
-
-  const handleNoteDragStateChange = (isOverFolder: boolean) => {
-    setIsDraggingToFolder(isOverFolder);
-  };
-
-  const handleNoteDragEnd = async (noteId: string, info: any) => {
-    const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
-    const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
-    const currentNote = notes.find(n => n.id === noteId);
-    
-    if (!currentNote) return;
-    
-    if (folderElem) {
-      const newFolderId = folderElem.getAttribute('data-folder-id');
-      if (newFolderId && newFolderId !== selectedFolderId) {
-        setTargetFolderId(newFolderId);
-        // Wait for exit animation to complete
-        await new Promise(resolve => setTimeout(resolve, 300));
-        await moveNoteToFolder(noteId, newFolderId);
-      }
-    } else {
-      // If not dropped on a folder, update position on board
-      const newX = currentNote.position.x + info.offset.x;
-      const newY = currentNote.position.y + info.offset.y;
-      handleDragEnd(noteId, { x: newX, y: newY });
-    }
-    
-    setDraggingNoteId(null);
-    setTargetFolderId(null);
-    setIsDraggingToFolder(false);
   };
 
   useEffect(() => {
@@ -264,11 +226,29 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               initialEditing={note.id === newNoteId}
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
-              onDragStart={() => handleNoteDragStart(note.id)}
-              onDragStateChange={handleNoteDragStateChange}
-              onDragEnd={(_, info) => handleNoteDragEnd(note.id, info)}
-              isDraggingToFolder={draggingNoteId === note.id && isDraggingToFolder}
-              targetFolderId={targetFolderId}
+              onDragEnd={(_, info) => {
+                // update position on board
+                const newX = note.position.x + info.offset.x;
+                const newY = note.position.y + info.offset.y;
+                handleDragEnd(note.id, { x: newX, y: newY });
+                // detect drop onto sidebar folder
+                if (info.point) {
+                  const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
+                  const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
+                  if (folderElem) {
+                    const newFolderId = folderElem.getAttribute('data-folder-id');
+                    if (newFolderId && newFolderId !== selectedFolderId) {
+                      // Compute default center position on board
+                      const cx = containerSize.width / 2 - NOTE_WIDTH / 2;
+                      const cy = containerSize.height / 2 - NOTE_HEIGHT / 2;
+                      const defaultX = cx - viewportPosition.x;
+                      const defaultY = cy - viewportPosition.y;
+                      moveNoteToFolder(note.id, newFolderId, { x: defaultX, y: defaultY });
+                    }
+                  }
+                }
+              }}
+              onNewNoteHandled={onNewNoteHandled}
             />
           ))}
         </div>
