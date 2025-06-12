@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // @ts-ignore
 import { motion, Reorder } from 'framer-motion';
 import useNoteStore from '../store/noteStore';
@@ -15,6 +15,32 @@ const Sidebar: React.FC = () => {
   const [folderToDelete, setFolderToDelete] = useState<{id: string; name: string} | null>(null);
   const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
   const isDragging = useNoteStore(state => state.isDragging);
+
+  useEffect(() => {
+    if (!isDragging) {
+      setHoveredFolderId(null);
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+
+      const elemUnderPointer = document.elementFromPoint(e.clientX, e.clientY);
+      const folderItem = elemUnderPointer?.closest('[data-folder-id]') as HTMLElement | null;
+      
+      if (folderItem) {
+        const folderId = folderItem.getAttribute('data-folder-id');
+        setHoveredFolderId(folderId);
+      } else {
+        setHoveredFolderId(null);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [isDragging]);
 
   const handleCreateFolder = async () => {
     if (!currentUser || !folderName.trim()) return;
@@ -105,8 +131,6 @@ const Sidebar: React.FC = () => {
             data-folder-id={folder.id}
             value={folder}
             onClick={() => setSelectedFolder(folder.id)}
-            onMouseEnter={() => isDragging && setHoveredFolderId(folder.id)}
-            onMouseLeave={() => setHoveredFolderId(null)}
             className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border transition-all duration-200 ${
               selectedFolderId === folder.id
                 ? 'bg-blue-200 border-blue-400'

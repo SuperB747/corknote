@@ -193,6 +193,21 @@ const NoteComponent: React.FC<NoteProps> = ({
       if (isOverSidebar !== isDraggingToFolder) {
         onDragStateChange?.(isOverSidebar);
       }
+
+      // If over sidebar, check for folder hover
+      if (isOverSidebar) {
+        const elemUnderPointer = document.elementFromPoint(info.point.x, info.point.y);
+        const folderItem = elemUnderPointer?.closest('[data-folder-id]');
+        if (folderItem) {
+          // Manually trigger mouseenter on the folder
+          const enterEvent = new MouseEvent('mouseenter', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+          });
+          folderItem.dispatchEvent(enterEvent);
+        }
+      }
     }
   };
 
@@ -217,36 +232,19 @@ const NoteComponent: React.FC<NoteProps> = ({
         transition: { duration: 0.3 }
       } : undefined}
       className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
-      onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
-      onHoverStart={() => {
-        if (isEditing) return;
-        if (!disableHover) setIsHovered(true);
-      }}
-      onHoverEnd={() => {
-        setIsHovered(false);
-      }}
-      onMouseDown={() => {
-        setIsMouseDown(true);
-        setDisableHover(true);
-      }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-      }}
-      onMouseEnter={() => {
-        if (!isMouseDown) {
-          setDisableHover(false);
-          setWasDragged(false);
-        }
-      }}
       style={{
-        pointerEvents: 'auto',
+        pointerEvents: isDragging ? 'none' : 'auto',
         zIndex: isHovered || isDragging ? 9999 : note.zIndex,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
+        touchAction: 'none',
+        userSelect: 'none',
       }}
       drag={!isEditing}
       dragMomentum={false}
+      dragConstraints={{ left: 0, top: 0, right: 0, bottom: 0 }}
+      dragElastic={1}
       onDragStart={handleDragStart}
       onDrag={handleDrag}
       onDragEnd={(e: React.MouseEvent | React.TouchEvent | PointerEvent, info: DragInfo) => {
