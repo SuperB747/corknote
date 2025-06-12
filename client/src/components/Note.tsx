@@ -64,6 +64,7 @@ interface NoteProps {
   onNewNoteHandled?: () => void;
   onDragEnd?: (event: any, info: any) => void;
   onDragStart?: () => void;
+  onDragStateChange?: (isDraggingToFolder: boolean) => void;
   isDraggingToFolder?: boolean;
   targetFolderId?: string | null;
 }
@@ -88,6 +89,7 @@ const NoteComponent: React.FC<NoteProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [disableHover, setDisableHover] = useState(false);
   const [wasDragged, setWasDragged] = useState(false);
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   // S, M, L size selection
   const defaultSize = note.sizeCategory as 'S'|'M'|'L';
   const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(defaultSize);
@@ -168,20 +170,30 @@ const NoteComponent: React.FC<NoteProps> = ({
     setShowDeleteConfirm(true);
   };
 
-  const handleDragEnd = (event: any, info: any) => {
-    // End drag: reset flags
-    setIsDragging(false);
-    setDragging(false);
-    onDragEnd?.(event, info);
-    // re-pin: new color and re-trigger animation
-    setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
-    setPinKey((k: number) => k + 1);
+  const handleDragStart = (event: any, info: any) => {
+    setIsDragging(true);
+    setDragging(true);
+    onDragStart?.();
+  };
+
+  const handleDrag = (event: any, info: any) => {
+    setDragPosition({ x: info.point.x, y: info.point.y });
+    
+    // Check if we're over the sidebar
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+      const sidebarRect = sidebar.getBoundingClientRect();
+      const isOverSidebar = info.point.x <= sidebarRect.right;
+      if (isOverSidebar !== isDraggingToFolder) {
+        onDragStateChange?.(isOverSidebar);
+      }
+    }
   };
 
   return (
     <motion.div
       transition={{ 
-        default: { duration: 0 },
+        default: { duration: 0.2 },
         scale: { duration: 0.2 },
         opacity: { duration: 0.2 }
       }}
@@ -220,24 +232,22 @@ const NoteComponent: React.FC<NoteProps> = ({
           setWasDragged(false);
         }
       }}
-      whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
       style={{
         pointerEvents: 'auto',
-        zIndex: isHovered || isDraggingToFolder ? 9999 : note.zIndex,
+        zIndex: isHovered || isDragging ? 9999 : note.zIndex,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
       }}
       drag={!isEditing}
       dragMomentum={false}
-      onDragStart={(e: any, info: any) => {
-        setIsDragging(true);
-        setDragging(true);
-        onDragStart?.();
-      }}
-      onDragEnd={(e: any, info: any) => {
+      onDragStart={handleDragStart}
+      onDrag={handleDrag}
+      onDragEnd={(e, info) => {
+        setIsDragging(false);
+        setDragging(false);
         setWasDragged(true);
-        handleDragEnd(e, info);
+        onDragEnd?.(e, info);
       }}
     >
       {/* Pin animation: hide while dragging, show on drop with random color */}

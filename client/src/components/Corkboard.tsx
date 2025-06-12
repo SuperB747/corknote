@@ -35,6 +35,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const [ocdOn, setOcdOn] = useState(false);
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
+  const [isDraggingToFolder, setIsDraggingToFolder] = useState(false);
 
   const folderNotes = notes.filter(note => note.folderId === selectedFolderId);
   const currentFolder = folders.find(f => f.id === selectedFolderId);
@@ -118,6 +119,10 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     setDraggingNoteId(noteId);
   };
 
+  const handleNoteDragStateChange = (isOverFolder: boolean) => {
+    setIsDraggingToFolder(isOverFolder);
+  };
+
   const handleNoteDragEnd = async (noteId: string, info: any) => {
     const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
     const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
@@ -142,6 +147,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     
     setDraggingNoteId(null);
     setTargetFolderId(null);
+    setIsDraggingToFolder(false);
   };
 
   useEffect(() => {
@@ -259,8 +265,9 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
               onDragStart={() => handleNoteDragStart(note.id)}
+              onDragStateChange={handleNoteDragStateChange}
               onDragEnd={(_, info) => handleNoteDragEnd(note.id, info)}
-              isDraggingToFolder={draggingNoteId === note.id && targetFolderId !== null}
+              isDraggingToFolder={draggingNoteId === note.id && isDraggingToFolder}
               targetFolderId={targetFolderId}
             />
           ))}

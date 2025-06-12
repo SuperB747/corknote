@@ -111,9 +111,13 @@ const Sidebar: React.FC = () => {
               selectedFolderId === folder.id
                 ? 'bg-blue-200 border-blue-400'
                 : hoveredFolderId === folder.id && isDragging
-                ? 'bg-blue-100 border-blue-300 scale-105'
-                : 'border-transparent hover:bg-gray-200 hover:border-gray-350'
-            } mb-1`}
+                ? 'bg-blue-100 border-blue-300 scale-105 shadow-lg'
+                : 'border-transparent hover:bg-gray-100'
+            } ${
+              hoveredFolderId === folder.id && isDragging
+              ? 'ring-2 ring-blue-400 ring-opacity-50'
+              : ''
+            }`}
           >
             {isEditingFolder === folder.id ? (
               <input
@@ -129,9 +133,13 @@ const Sidebar: React.FC = () => {
               <>
                 <button
                   onClick={() => setSelectedFolder(folder.id)}
-                  className="flex items-center justify-start flex-1 pl-2 text-gray-700 min-w-0"
+                  className={`flex items-center justify-start flex-1 pl-2 text-gray-700 min-w-0 ${
+                    hoveredFolderId === folder.id && isDragging ? 'text-blue-600' : ''
+                  }`}
                 >
-                  <FolderIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                  <FolderIcon className={`w-5 h-5 mr-2 flex-shrink-0 transition-colors duration-200 ${
+                    hoveredFolderId === folder.id && isDragging ? 'text-blue-500' : 'text-gray-400'
+                  }`} />
                   <span className="flex-1 min-w-0 truncate text-left">{folder.name}</span>
                 </button>
                 <div className="flex pr-2">
