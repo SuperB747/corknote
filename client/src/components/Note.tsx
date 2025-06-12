@@ -57,12 +57,17 @@ const MAX_ROTATION = 5;
 // possible pin colors
 const pinColors = ['#e53e3e', '#d69e2e', '#38a169', '#3182ce', '#805ad5', '#d53f8c'];
 
+interface DragInfo {
+  point: { x: number; y: number };
+  offset?: { x: number; y: number };
+}
+
 interface NoteProps {
   note: Note;
-  rotation?: number;  // rotation angle in degrees
+  rotation?: number;
   initialEditing?: boolean;
   onNewNoteHandled?: () => void;
-  onDragEnd?: (event: any, info: any) => void;
+  onDragEnd?: (event: React.MouseEvent | React.TouchEvent | PointerEvent, info: DragInfo) => void;
   onDragStart?: () => void;
   onDragStateChange?: (isDraggingToFolder: boolean) => void;
   isDraggingToFolder?: boolean;
@@ -75,6 +80,7 @@ const NoteComponent: React.FC<NoteProps> = ({
   initialEditing = false, 
   onDragEnd, 
   onDragStart,
+  onDragStateChange,
   onNewNoteHandled,
   isDraggingToFolder = false,
   targetFolderId = null
@@ -170,13 +176,13 @@ const NoteComponent: React.FC<NoteProps> = ({
     setShowDeleteConfirm(true);
   };
 
-  const handleDragStart = (event: any, info: any) => {
+  const handleDragStart = (event: React.MouseEvent | React.TouchEvent | PointerEvent, info: DragInfo) => {
     setIsDragging(true);
     setDragging(true);
     onDragStart?.();
   };
 
-  const handleDrag = (event: any, info: any) => {
+  const handleDrag = (event: React.MouseEvent | React.TouchEvent | PointerEvent, info: DragInfo) => {
     setDragPosition({ x: info.point.x, y: info.point.y });
     
     // Check if we're over the sidebar
@@ -243,7 +249,7 @@ const NoteComponent: React.FC<NoteProps> = ({
       dragMomentum={false}
       onDragStart={handleDragStart}
       onDrag={handleDrag}
-      onDragEnd={(e, info) => {
+      onDragEnd={(e: React.MouseEvent | React.TouchEvent | PointerEvent, info: DragInfo) => {
         setIsDragging(false);
         setDragging(false);
         setWasDragged(true);
