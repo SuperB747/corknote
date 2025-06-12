@@ -147,12 +147,9 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   };
 
   const handleDragEnd = (event: any, info: any) => {
-    // End drag: reset hover lock and transformOrigin
+    // End drag: reset flags
     setIsDragging(false);
     setDragging(false);
-    setDisableHover(false);
-    const el = (event.currentTarget as HTMLElement);
-    el.style.transformOrigin = '';
     onDragEnd?.(event, info);
     // re-pin: new color and re-trigger animation
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
@@ -176,8 +173,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsHovered(false);
       }}
       whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
-      // Scale down note on drag for preview
-      whileDrag={{ scale: 0.3, opacity: 0.3 }}
       style={{
         pointerEvents: 'auto',
         x: note.position.x,
@@ -190,18 +185,12 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       drag={!isEditing}
       dragMomentum={false}
-      // Set transform origin based on pointer down position for accurate scaling
-      onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => {
-        const el = e.currentTarget;
-        const rect = el.getBoundingClientRect();
-        const xPct = ((e.clientX - rect.left) / rect.width) * 100;
-        const yPct = ((e.clientY - rect.top) / rect.height) * 100;
-        el.style.transformOrigin = `${xPct}% ${yPct}%`;
+      // Set dragging flags on drag start
+      onDragStart={(e: any, info: any) => {
+        setIsDragging(true);
+        setDragging(true);
       }}
       onDragEnd={(e: any, info: any) => {
-        // Clear transformOrigin after drag
-        const el = (e.currentTarget as HTMLElement);
-        el.style.transformOrigin = '';
         handleDragEnd(e, info);
       }}
     >
