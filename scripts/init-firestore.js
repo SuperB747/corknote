@@ -1,4 +1,4 @@
-import { initializeApp, cert } from 'firebase-admin/app';
+import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin with emulator configuration
@@ -12,33 +12,28 @@ initializeApp({
 
 const db = getFirestore();
 
+// Helper function to upsert a document if it doesn't exist
+async function upsertDoc(collectionName, docId, data) {
+  const docRef = db.collection(collectionName).doc(docId);
+  const snapshot = await docRef.get();
+  if (!snapshot.exists) {
+    console.log(`Creating ${collectionName}/${docId}`);
+    await docRef.set(data);
+  } else {
+    console.log(`${collectionName}/${docId} already exists`);
+  }
+}
+
 async function initializeFirestore() {
   try {
-    // Create collections
-    const collections = ['folders', 'notes'];
-    
-    for (const collectionName of collections) {
-      const collectionRef = db.collection(collectionName);
-      const doc = await collectionRef.get();
-      if (!doc.exists) {
-        console.log(`Creating collection: ${collectionName}`);
-        await collectionRef.doc('_config').set({
-          created: FieldValue.serverTimestamp()
-        });
-      }
-    }
-
-    // Create initial folder
-    const folderRef = db.collection('folders').doc('initial');
-    await folderRef.set({
+    // Initialize Firestore with initial data
+    await upsertDoc('folders', 'initial', {
       name: 'Welcome',
       userId: 'system',
       createdAt: FieldValue.serverTimestamp(),
     });
 
-    // Create welcome note
-    const noteRef = db.collection('notes').doc('welcome');
-    await noteRef.set({
+    await upsertDoc('notes', 'welcome', {
       title: 'Welcome to CorkNote',
       content: 'This is your first note!',
       userId: 'system',
