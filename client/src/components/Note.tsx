@@ -196,9 +196,16 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         updateNotePosition(note.id, note.position);
       }}
       onDrag={(e: any, info: any) => {
-        const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
-        const overFolder = !!elem?.closest('[data-folder-id]');
-        setIsOverSidebar(overFolder);
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+          const rect = sidebar.getBoundingClientRect();
+          const over =
+            info.point.x >= rect.left &&
+            info.point.x <= rect.right &&
+            info.point.y >= rect.top &&
+            info.point.y <= rect.bottom;
+          setIsOverSidebar(over);
+        }
       }}
       onDragEnd={(e: any, info: any) => {
         setIsDragging(false);

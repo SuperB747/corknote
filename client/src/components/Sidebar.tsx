@@ -48,7 +48,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="relative z-20 w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-full">
+    <div id="sidebar" className="relative z-20 w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-full">
       {currentUser && (
         <div className="mb-6 p-3 bg-blue-300 rounded-lg text-sm">
           <UserProfile user={currentUser} />
