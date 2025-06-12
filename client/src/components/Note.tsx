@@ -74,6 +74,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [disableHover, setDisableHover] = useState(false);
+  const [wasDragged, setWasDragged] = useState(false);
   // S, M, L size selection
   const defaultSize = note.sizeCategory as 'S'|'M'|'L';
   const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(defaultSize);
@@ -87,6 +88,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   // Ref & state for detecting overflow in view mode
   const contentRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
+  const [isMouseDown, setIsMouseDown] = useState(false);
 
   // when entering edit mode, reset selectedSize to current note size
   useEffect(() => {
@@ -127,6 +129,13 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       setHasOverflow(el.scrollHeight > el.clientHeight);
     }
   }, [note.content]);
+
+  // Listen for mouseup anywhere to reset isMouseDown
+  useEffect(() => {
+    const handleUp = () => setIsMouseDown(false);
+    window.addEventListener('mouseup', handleUp);
+    return () => window.removeEventListener('mouseup', handleUp);
+  }, []);
 
   const handleSave = () => {
     // apply selected note size
@@ -170,10 +179,23 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsHovered(false);
       }}
       onMouseDown={() => {
+        setIsMouseDown(true);
         setDisableHover(true);
       }}
       onMouseLeave={() => {
-        setDisableHover(false);
+        // Only re-enable hover if mouse is not down and not just dragged
+        if (!isMouseDown && !wasDragged) {
+          setDisableHover(false);
+        }
+        // If wasDragged, keep hover disabled until re-enter
+        if (wasDragged) setWasDragged(false);
+      }}
+      onMouseEnter={() => {
+        // Only re-enable hover if mouse is not down and was just dragged
+        if (!isMouseDown && wasDragged) {
+          setDisableHover(false);
+          setWasDragged(false);
+        }
       }}
       whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
       style={{
@@ -193,6 +215,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setDragging(true);
       }}
       onDragEnd={(e: any, info: any) => {
+        setWasDragged(true);
         handleDragEnd(e, info);
       }}
     >
