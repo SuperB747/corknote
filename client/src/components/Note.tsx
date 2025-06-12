@@ -176,8 +176,10 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsHovered(false);
       }}
       whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
+      // Scale down note on drag for preview
+      whileDrag={{ scale: 0.3, opacity: 0.3 }}
       style={{
-        pointerEvents: /*isOverSidebar ? 'none' :*/ 'auto',
+        pointerEvents: 'auto',
         x: note.position.x,
         y: note.position.y,
         rotate: rotation,
@@ -188,16 +190,20 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       drag={!isEditing}
       dragMomentum={false}
-      onDragStart={(event: any, info: any) => {
-        // Compute and set transformOrigin so scaling pivots under cursor
-        setDisableHover(true);
-        const el = (event.currentTarget as HTMLElement);
+      // Set transform origin based on pointer down position for accurate scaling
+      onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => {
+        const el = e.currentTarget;
         const rect = el.getBoundingClientRect();
-        const xPct = ((info.point.x - rect.left) / rect.width) * 100;
-        const yPct = ((info.point.y - rect.top) / rect.height) * 100;
+        const xPct = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPct = ((e.clientY - rect.top) / rect.height) * 100;
         el.style.transformOrigin = `${xPct}% ${yPct}%`;
       }}
-      onDragEnd={handleDragEnd}
+      onDragEnd={(e: any, info: any) => {
+        // Clear transformOrigin after drag
+        const el = (e.currentTarget as HTMLElement);
+        el.style.transformOrigin = '';
+        handleDragEnd(e, info);
+      }}
     >
       {/* Pin animation: hide while dragging, show on drop with random color */}
       {!isDragging && (
