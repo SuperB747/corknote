@@ -65,7 +65,7 @@ interface NoteProps {
 }
 
 const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
-  const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation, moveNoteToFolder } = useNoteStore();
+  const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
   const setDragging = useNoteStore(state => state.setDragging);
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [title, setTitle] = useState(note.title);
@@ -75,9 +75,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [isHovered, setIsHovered] = useState(false);
   const [disableHover, setDisableHover] = useState(false);
   const [wasDragged, setWasDragged] = useState(false);
-  const [isOverSidebar, setIsOverSidebar] = useState(false);
-  const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
-  const [isMovingToFolder, setIsMovingToFolder] = useState(false);
   // S, M, L size selection
   const defaultSize = note.sizeCategory as 'S'|'M'|'L';
   const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(defaultSize);
@@ -140,39 +137,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     return () => window.removeEventListener('mouseup', handleUp);
   }, []);
 
-  // Handle drag over sidebar
-  useEffect(() => {
-    const handleDragOver = (e: MouseEvent) => {
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar) {
-        const rect = sidebar.getBoundingClientRect();
-        if (e.clientX <= rect.right) {
-          setIsOverSidebar(true);
-          // Find the folder element under the cursor
-          const elem = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
-          const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
-          if (folderElem) {
-            const folderId = folderElem.getAttribute('data-folder-id');
-            setTargetFolderId(folderId);
-          } else {
-            setTargetFolderId(null);
-          }
-        } else {
-          setIsOverSidebar(false);
-          setTargetFolderId(null);
-        }
-      }
-    };
-
-    if (isDragging) {
-      window.addEventListener('mousemove', handleDragOver);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleDragOver);
-    };
-  }, [isDragging]);
-
   const handleSave = () => {
     // apply selected note size
     updateNoteSize(note.id, selectedSize);
@@ -195,29 +159,10 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     // End drag: reset flags
     setIsDragging(false);
     setDragging(false);
-    
-    // If we're over a folder, move the note
-    if (targetFolderId && targetFolderId !== note.folderId) {
-      setIsMovingToFolder(true);
-      // Compute default center position on board
-      const container = document.querySelector('.corkboard-container');
-      if (container) {
-        const rect = container.getBoundingClientRect();
-        const cx = rect.width / 2 - SIZE_OPTIONS[selectedSize].width / 2;
-        const cy = rect.height / 2 - SIZE_OPTIONS[selectedSize].height / 2;
-        moveNoteToFolder(note.id, targetFolderId, { x: cx, y: cy });
-      }
-    }
-    
     onDragEnd?.(event, info);
     // re-pin: new color and re-trigger animation
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
     setPinKey((k: number) => k + 1);
-    
-    // Reset states
-    setIsOverSidebar(false);
-    setTargetFolderId(null);
-    setTimeout(() => setIsMovingToFolder(false), 500); // Reset after animation
   };
 
   return (
@@ -239,8 +184,10 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       onMouseLeave={() => {
         setIsHovered(false);
+        // Do not re-enable hover here after drag; wait for mouse enter
       }}
       onMouseEnter={() => {
+        // After drag, re-enable hover on re-enter
         if (!isMouseDown && wasDragged) {
           setDisableHover(false);
           setWasDragged(false);
@@ -256,9 +203,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
-        opacity: isOverSidebar ? 0.5 : 1,
-        scale: isMovingToFolder ? 0.5 : 1,
-        transition: isMovingToFolder ? { duration: 0.5, ease: "easeInOut" } : undefined
       }}
       drag={!isEditing}
       dragMomentum={false}
@@ -266,7 +210,10 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsDragging(true);
         setDragging(true);
       }}
-      onDragEnd={handleDragEnd}
+      onDragEnd={(e: any, info: any) => {
+        setWasDragged(true);
+        handleDragEnd(e, info);
+      }}
     >
       {/* Pin animation: hide while dragging, show on drop with random color */}
       {!isDragging && (
