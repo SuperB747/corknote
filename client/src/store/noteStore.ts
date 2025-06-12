@@ -296,17 +296,11 @@ const useNoteStore = create<NoteStore>((set, get) => {
         if (oldFolderId && notesCache[oldFolderId]) {
           notesCache[oldFolderId] = notesCache[oldFolderId].filter(n => n.id !== noteId);
         }
-        // Fetch only the moved note from Firestore
-        const fetchedNote = await getNoteById(noteId);
-        // Update new folder cache
-        const newCache = notesCache[newFolderId] ?? [];
-        notesCache[newFolderId] = [...newCache, fetchedNote];
-        // Keep current folder selected and refresh its notes in place
+        // Clear cache for new folder so full data will be fetched from Firestore on next load
+        delete notesCache[newFolderId];
+        // Refresh current (old) folder notes
         if (oldFolderId) {
-          set({
-            notes: notesCache[oldFolderId],
-            isLoading: false
-          });
+          set({ notes: notesCache[oldFolderId], isLoading: false });
         } else {
           set({ isLoading: false });
         }
