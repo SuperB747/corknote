@@ -1,7 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ArrowsRightLeftIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-// @ts-ignore: AnimatePresence may not be in TS declarations
-import { AnimatePresence } from 'framer-motion';
 import useNoteStore from '../store/noteStore';
 import Note from './Note';
 import FirebaseUsageMonitor from './FirebaseUsageMonitor';
@@ -169,7 +167,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 overflow-visible"
+      className="absolute inset-0 overflow-hidden"
     >
       {/* Compact floating toolbar */}
       <div className="no-drag absolute top-4 right-4 bg-white/70 backdrop-blur-md rounded-md px-4 py-2 shadow-md flex items-center space-x-2 z-50">
@@ -222,39 +220,37 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           <div className="absolute inset-0 bg-cork-overlay"></div>
           
           {/* Notes */}
-          <AnimatePresence>
-            {folderNotes.map((note) => (
-              <Note
-                key={note.id}
-                initialEditing={note.id === newNoteId}
-                note={note}
-                rotation={ocdEnabled ? 0 : note.rotation}
-                onDragEnd={(_, info) => {
-                  // update position on board
-                  const newX = note.position.x + info.offset.x;
-                  const newY = note.position.y + info.offset.y;
-                  handleDragEnd(note.id, { x: newX, y: newY });
-                  // detect drop onto sidebar folder
-                  if (info.point) {
-                    const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
-                    const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
-                    if (folderElem) {
-                      const newFolderId = folderElem.getAttribute('data-folder-id');
-                      if (newFolderId && newFolderId !== selectedFolderId) {
-                        // Compute default center position on board
-                        const cx = containerSize.width / 2 - NOTE_WIDTH / 2;
-                        const cy = containerSize.height / 2 - NOTE_HEIGHT / 2;
-                        const defaultX = cx - viewportPosition.x;
-                        const defaultY = cy - viewportPosition.y;
-                        moveNoteToFolder(note.id, newFolderId, { x: defaultX, y: defaultY });
-                      }
+          {folderNotes.map((note) => (
+            <Note
+              key={note.id}
+              initialEditing={note.id === newNoteId}
+              note={note}
+              rotation={ocdEnabled ? 0 : note.rotation}
+              onDragEnd={(_, info) => {
+                // update position on board
+                const newX = note.position.x + info.offset.x;
+                const newY = note.position.y + info.offset.y;
+                handleDragEnd(note.id, { x: newX, y: newY });
+                // detect drop onto sidebar folder
+                if (info.point) {
+                  const elem = document.elementFromPoint(info.point.x, info.point.y) as HTMLElement | null;
+                  const folderElem = elem?.closest('[data-folder-id]') as HTMLElement | null;
+                  if (folderElem) {
+                    const newFolderId = folderElem.getAttribute('data-folder-id');
+                    if (newFolderId && newFolderId !== selectedFolderId) {
+                      // Compute default center position on board
+                      const cx = containerSize.width / 2 - NOTE_WIDTH / 2;
+                      const cy = containerSize.height / 2 - NOTE_HEIGHT / 2;
+                      const defaultX = cx - viewportPosition.x;
+                      const defaultY = cy - viewportPosition.y;
+                      moveNoteToFolder(note.id, newFolderId, { x: defaultX, y: defaultY });
                     }
                   }
-                }}
-                onNewNoteHandled={onNewNoteHandled}
-              />
-            ))}
-          </AnimatePresence>
+                }
+              }}
+              onNewNoteHandled={onNewNoteHandled}
+            />
+          ))}
         </div>
       </div>
       {process.env.NODE_ENV === 'development' && <FirebaseUsageMonitor />}

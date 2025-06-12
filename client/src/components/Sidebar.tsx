@@ -8,7 +8,7 @@ import { UserProfile } from './UserProfile';
 
 const Sidebar: React.FC = () => {
   const { currentUser } = useAuth();
-  const { folders, selectedFolderId, setSelectedFolder, createFolder, updateFolder, deleteFolder, reorderFolders, isNoteDragging } = useNoteStore();
+  const { folders, selectedFolderId, setSelectedFolder, createFolder, updateFolder, deleteFolder, reorderFolders } = useNoteStore();
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
@@ -48,7 +48,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div data-sidebar className="w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-full relative z-20">
+    <div className="w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-full">
       {currentUser && (
         <div className="mb-6 p-3 bg-blue-300 rounded-lg text-sm">
           <UserProfile user={currentUser} />
@@ -98,15 +98,15 @@ const Sidebar: React.FC = () => {
 
       <Reorder.Group initial={false} axis="y" values={folders} onReorder={reorderFolders} className="space-y-2 flex-1 overflow-y-auto overscroll-contain scrollbar-container">
         {folders.map((folder) => (
-          <Reorder.Item
-            initial={false}
+          <Reorder.Item initial={false}
             key={folder.id}
+            data-folder-id={folder.id}
             value={folder}
             onClick={() => setSelectedFolder(folder.id)}
             className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
               selectedFolderId === folder.id
                 ? 'bg-blue-200 border-blue-400'
-                : 'border-transparent ' + (isNoteDragging ? 'hover:bg-green-100 hover:border-green-400' : 'hover:bg-gray-200 hover:border-gray-350')
+                : 'border-transparent hover:bg-gray-200 hover:border-gray-350'
             } mb-1`}
           >
             {isEditingFolder === folder.id ? (
