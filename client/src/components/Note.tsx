@@ -75,6 +75,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [isHovered, setIsHovered] = useState(false);
   const [disableHover, setDisableHover] = useState(false);
   const [isOverSidebar, setIsOverSidebar] = useState(false);
+  // Store pointer position inside note to set transform origin
+  const [dragOrigin, setDragOrigin] = useState<{ x: number; y: number } | null>(null);
   // S, M, L size selection
   const defaultSize = note.sizeCategory as 'S'|'M'|'L';
   const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(defaultSize);
@@ -179,7 +181,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         x: note.position.x,
         y: note.position.y,
         rotate: rotation,
-        transformOrigin: 'center center',
+        transformOrigin: dragOrigin ? `${dragOrigin.x}% ${dragOrigin.y}%` : 'center center',
         zIndex: isHovered ? 9999 : note.zIndex,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
@@ -187,13 +189,19 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       drag={!isEditing}
       dragMomentum={false}
-      onDragStart={() => {
+      onDragStart={(event: any, info: any) => {
         setIsDragging(true);
         setDragging(true);
         setDisableHover(true);
         setIsHovered(false);
         setIsOverSidebar(false);
         updateNotePosition(note.id, note.position);
+        // compute pointer position relative to element for scaling origin
+        const el = (event.currentTarget as HTMLElement);
+        const rect = el.getBoundingClientRect();
+        const xPct = ((event.clientX - rect.left) / rect.width) * 100;
+        const yPct = ((event.clientY - rect.top) / rect.height) * 100;
+        setDragOrigin({ x: xPct, y: yPct });
       }}
       onDrag={(e: any, info: any) => {
         const sidebar = document.getElementById('sidebar');
@@ -205,12 +213,21 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
             info.point.y >= rect.top &&
             info.point.y <= rect.bottom;
           setIsOverSidebar(over);
+          if (over) {
+            const el = (e.currentTarget as HTMLElement);
+            const elRect = el.getBoundingClientRect();
+            const xPct2 = ((info.point.x - elRect.left) / elRect.width) * 100;
+            const yPct2 = ((info.point.y - elRect.top) / elRect.height) * 100;
+            setDragOrigin({ x: xPct2, y: yPct2 });
+          }
         }
       }}
       onDragEnd={(e: any, info: any) => {
         setIsDragging(false);
         setDragging(false);
         setIsOverSidebar(false);
+        // clear stored origin
+        setDragOrigin(null);
         onDragEnd?.(e, info);
         // After dragging, remain in view mode (don't enter editing)
       }}
