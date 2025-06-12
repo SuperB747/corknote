@@ -190,19 +190,18 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       drag={!isEditing}
       dragMomentum={false}
       onDragStart={(event: any, info: any) => {
-        // Begin drag: compute transform origin based on cursor position
+        // Begin drag: compute transform origin based on initial cursor position
         setIsDragging(true);
         setDragging(true);
         setDisableHover(true);
         setIsHovered(false);
         setIsOverSidebar(false);
+        // calculate pointer relative position inside element
         const el = (event.currentTarget as HTMLElement);
         const rect = el.getBoundingClientRect();
-        const xPct = ((event.clientX - rect.left) / rect.width) * 100;
-        const yPct = ((event.clientY - rect.top) / rect.height) * 100;
+        const xPct = ((info.point.x - rect.left) / rect.width) * 100;
+        const yPct = ((info.point.y - rect.top) / rect.height) * 100;
         setDragOrigin({ x: xPct, y: yPct });
-        // reset element position tracking
-        updateNotePosition(note.id, note.position);
       }}
       onDrag={(e: any, info: any) => {
         const sidebar = document.getElementById('sidebar');
