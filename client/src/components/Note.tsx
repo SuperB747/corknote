@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// @ts-ignore
+import { motion } from 'framer-motion';
 import { Note } from '../store/noteStore';
 import useNoteStore from '../store/noteStore';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -178,233 +179,231 @@ const NoteComponent: React.FC<NoteProps> = ({
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        transition={{ 
-          default: { duration: 0 },
-          scale: { duration: 0.2 },
-          opacity: { duration: 0.2 }
-        }}
-        initial={false}
-        animate={{
-          scale: isDraggingToFolder ? 0.7 : isHovered ? 1.15 : 1,
-          opacity: isDraggingToFolder ? 0.6 : 1,
-          x: note.position.x,
-          y: note.position.y,
-          rotate: rotation,
-        }}
-        exit={targetFolderId ? {
-          scale: 0.3,
-          opacity: 0,
-          transition: { duration: 0.3 }
-        } : undefined}
-        className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
-        onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
-        onHoverStart={() => {
-          if (isEditing) return;
-          if (!disableHover) setIsHovered(true);
-        }}
-        onHoverEnd={() => {
-          setIsHovered(false);
-        }}
-        onMouseDown={() => {
-          setIsMouseDown(true);
-          setDisableHover(true);
-        }}
-        onMouseLeave={() => {
-          setIsHovered(false);
-        }}
-        onMouseEnter={() => {
-          if (!isMouseDown) {
-            setDisableHover(false);
-            setWasDragged(false);
-          }
-        }}
-        whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
-        style={{
-          pointerEvents: 'auto',
-          zIndex: isHovered || isDraggingToFolder ? 9999 : note.zIndex,
-          backgroundColor: color,
-          width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
-          height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
-        }}
-        drag={!isEditing}
-        dragMomentum={false}
-        onDragStart={(e: any, info: any) => {
-          setIsDragging(true);
-          setDragging(true);
-          onDragStart?.();
-        }}
-        onDragEnd={(e: any, info: any) => {
-          setWasDragged(true);
-          handleDragEnd(e, info);
-        }}
-      >
-        {/* Pin animation: hide while dragging, show on drop with random color */}
-        {!isDragging && (
-          <motion.div
-            key={pinKey}
-            className="absolute top-0 left-1/2 -translate-x-1/2"
-            initial={{ y: -30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1, type: 'spring', stiffness: 400, damping: 20 }}
-          >
-            <MapPinIcon className="w-6 h-6" style={{ color: pinColor }} />
-          </motion.div>
-        )}
+    <motion.div
+      transition={{ 
+        default: { duration: 0 },
+        scale: { duration: 0.2 },
+        opacity: { duration: 0.2 }
+      }}
+      initial={false}
+      animate={{
+        scale: isDraggingToFolder ? 0.7 : isHovered ? 1.15 : 1,
+        opacity: isDraggingToFolder ? 0.6 : 1,
+        x: note.position.x,
+        y: note.position.y,
+        rotate: rotation,
+      }}
+      exit={targetFolderId ? {
+        scale: 0.3,
+        opacity: 0,
+        transition: { duration: 0.3 }
+      } : undefined}
+      className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
+      onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
+      onHoverStart={() => {
+        if (isEditing) return;
+        if (!disableHover) setIsHovered(true);
+      }}
+      onHoverEnd={() => {
+        setIsHovered(false);
+      }}
+      onMouseDown={() => {
+        setIsMouseDown(true);
+        setDisableHover(true);
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+      }}
+      onMouseEnter={() => {
+        if (!isMouseDown) {
+          setDisableHover(false);
+          setWasDragged(false);
+        }
+      }}
+      whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
+      style={{
+        pointerEvents: 'auto',
+        zIndex: isHovered || isDraggingToFolder ? 9999 : note.zIndex,
+        backgroundColor: color,
+        width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
+        height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
+      }}
+      drag={!isEditing}
+      dragMomentum={false}
+      onDragStart={(e: any, info: any) => {
+        setIsDragging(true);
+        setDragging(true);
+        onDragStart?.();
+      }}
+      onDragEnd={(e: any, info: any) => {
+        setWasDragged(true);
+        handleDragEnd(e, info);
+      }}
+    >
+      {/* Pin animation: hide while dragging, show on drop with random color */}
+      {!isDragging && (
+        <motion.div
+          key={pinKey}
+          className="absolute top-0 left-1/2 -translate-x-1/2"
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1, type: 'spring', stiffness: 400, damping: 20 }}
+        >
+          <MapPinIcon className="w-6 h-6" style={{ color: pinColor }} />
+        </motion.div>
+      )}
 
-        {/* Content */}
-        {isEditing ? (
-          <>
-            {/* Size selector overlay */}
-            <div className="absolute top-2 right-2 flex items-center gap-2 bg-transparent p-1 rounded">
-              {(['S','M','L'] as const).map(key => (
-                <label key={key} className="inline-flex items-center gap-1 text-sm cursor-pointer">
-                  <input
-                    type="radio"
-                    name="size"
-                    value={key}
-                    checked={selectedSize===key}
-                    onChange={() => setSelectedSize(key)}
-                    className="sr-only"
-                  />
-                  <div className={`w-4 h-4 border-2 rounded-full flex items-center justify-center ${selectedSize===key ? 'border-black' : 'border-gray-300'}`}>
-                    {selectedSize===key && <div className="w-2 h-2 bg-black rounded-full" />}
-                  </div>
-                  <span className="text-xs">{key}</span>
-                </label>
+      {/* Content */}
+      {isEditing ? (
+        <>
+          {/* Size selector overlay */}
+          <div className="absolute top-2 right-2 flex items-center gap-2 bg-transparent p-1 rounded">
+            {(['S','M','L'] as const).map(key => (
+              <label key={key} className="inline-flex items-center gap-1 text-sm cursor-pointer">
+                <input
+                  type="radio"
+                  name="size"
+                  value={key}
+                  checked={selectedSize===key}
+                  onChange={() => setSelectedSize(key)}
+                  className="sr-only"
+                />
+                <div className={`w-4 h-4 border-2 rounded-full flex items-center justify-center ${selectedSize===key ? 'border-black' : 'border-gray-300'}`}>
+                  {selectedSize===key && <div className="w-2 h-2 bg-black rounded-full" />}
+                </div>
+                <span className="text-xs">{key}</span>
+              </label>
+            ))}
+          </div>
+          {/* Editor container: flexible content area with scroll, controls fixed at bottom */}
+          <div className="flex flex-col h-full">
+            {/* Note editing inner padding: title and editor area */}
+            <div className="flex flex-col flex-1 p-1">
+              <input
+                className="w-full bg-transparent border-b border-gray-400 focus:outline-none"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onFocus={() => initialEditing && title === note.title && setTitle('')}
+              />
+              <div className="mt-2 flex-1 overflow-auto scrollbar-container">
+                {/* @ts-ignore */}
+                <ReactQuill
+                  theme="snow"
+                  value={content}
+                  onChange={setContent}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  className="h-full"
+                />
+              </div>
+            </div>
+            <div className="flex justify-center flex-wrap gap-1 py-1">
+              {[...Object.values(neonColors), ...Object.values(pastelColors)].map((hex, idx) => (
+                <button
+                  key={idx}
+                  className={`w-6 h-6 rounded-full border ${color === hex ? 'border-black' : 'border-gray-300'}`}
+                  style={{ backgroundColor: hex }}
+                  onClick={() => setColor(hex)}
+                />
               ))}
             </div>
-            {/* Editor container: flexible content area with scroll, controls fixed at bottom */}
-            <div className="flex flex-col h-full">
-              {/* Note editing inner padding: title and editor area */}
-              <div className="flex flex-col flex-1 p-1">
-                <input
-                  className="w-full bg-transparent border-b border-gray-400 focus:outline-none"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onFocus={() => initialEditing && title === note.title && setTitle('')}
-                />
-                <div className="mt-2 flex-1 overflow-auto scrollbar-container">
-                  {/* @ts-ignore */}
-                  <ReactQuill
-                    theme="snow"
-                    value={content}
-                    onChange={setContent}
-                    modules={quillModules}
-                    formats={quillFormats}
-                    className="h-full"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-center flex-wrap gap-1 py-1">
-                {[...Object.values(neonColors), ...Object.values(pastelColors)].map((hex, idx) => (
-                  <button
-                    key={idx}
-                    className={`w-6 h-6 rounded-full border ${color === hex ? 'border-black' : 'border-gray-300'}`}
-                    style={{ backgroundColor: hex }}
-                    onClick={() => setColor(hex)}
-                  />
-                ))}
-              </div>
-              <div className="flex justify-end gap-2 py-1 px-4">
-                <button
-                  className="px-2 py-1 text-sm"
-                  onClick={() => {
-                    if (initialEditing) {
-                      deleteNote(note.id);
-                      if (onNewNoteHandled) onNewNoteHandled();
-                    } else {
-                      setIsEditing(false);
-                      setSelectedSize(prevSizeRef.current);
-                      setTitle(note.title);
-                      setContent(note.content);
-                      setColor(note.color);
-                    }
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-2 py-1 text-sm text-blue-600"
-                  onClick={() => {
-                    prevSizeRef.current = selectedSize;
-                    handleSave();
-                  }}
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="p-2 flex flex-col h-full relative">
-            {/* Header: title and action buttons */}
-            <div className="mt-3 mb-1 flex justify-between items-start shrink-0">
-              <h3 className="font-medium text-lg truncate">{note.title}</h3>
-              <div className="flex gap-2">
-                <button onClick={() => setIsEditing(true)} className="p-1 hover:bg-black/10 rounded">
-                  <PencilIcon className="w-4 h-4" />
-                </button>
-                <button onClick={handleDelete} className="p-1 hover:bg-black/10 rounded">
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            {/* Content area: truncated until hover, scroll on hover */}
-            <div
-              ref={contentRef}
-              className={`mt-0 flex-1 relative text-sm scrollbar-container ${hasOverflow ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'}`}
-              onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => {
-                // Only intercept vertical scroll when content is overflowed, so note content scrolls
-                if (hasOverflow && e.deltaY !== 0) {
-                  e.stopPropagation();
-                }
-                // Horizontal scroll events will propagate to enable board panning
-              }}
-            >
-              <div className="ql-snow p-0">
-                <div
-                  className="ql-editor p-0 [&_ul]:pl-2 [&_ol]:pl-2 [&_ul]:!mt-0 [&_ol]:!mt-0 [&_ul]:!mb-0 [&_ol]:!mb-0 [&_ul]:list-outside [&_ol]:list-outside"
-                  style={{ margin: 0, padding: 0 }}
-                  dangerouslySetInnerHTML={{ __html: note.content }}
-                />
-              </div>
-            </div>
-            {/* Ellipsis indicator for truncated content */}
-            {hasOverflow && (
-              <div className="absolute bottom-1 right-2 text-gray-400 pointer-events-none">
-                ...
-              </div>
-            )}
-          </div>
-        )}
-        {/* delete confirm modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
-            <div className="bg-white rounded-lg p-6 w-80 shadow-xl border border-gray-200">
-              <p className="text-center text-gray-900 font-semibold text-lg mb-4">
-                Are you sure you want to delete this note?
-              </p>
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => { deleteNote(note.id); setShowDeleteConfirm(false); }}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
-                >
-                  Delete
-                </button>
-              </div>
+            <div className="flex justify-end gap-2 py-1 px-4">
+              <button
+                className="px-2 py-1 text-sm"
+                onClick={() => {
+                  if (initialEditing) {
+                    deleteNote(note.id);
+                    if (onNewNoteHandled) onNewNoteHandled();
+                  } else {
+                    setIsEditing(false);
+                    setSelectedSize(prevSizeRef.current);
+                    setTitle(note.title);
+                    setContent(note.content);
+                    setColor(note.color);
+                  }
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-2 py-1 text-sm text-blue-600"
+                onClick={() => {
+                  prevSizeRef.current = selectedSize;
+                  handleSave();
+                }}
+              >
+                Save
+              </button>
             </div>
           </div>
-        )}
-      </motion.div>
-    </AnimatePresence>
+        </>
+      ) : (
+        <div className="p-2 flex flex-col h-full relative">
+          {/* Header: title and action buttons */}
+          <div className="mt-3 mb-1 flex justify-between items-start shrink-0">
+            <h3 className="font-medium text-lg truncate">{note.title}</h3>
+            <div className="flex gap-2">
+              <button onClick={() => setIsEditing(true)} className="p-1 hover:bg-black/10 rounded">
+                <PencilIcon className="w-4 h-4" />
+              </button>
+              <button onClick={handleDelete} className="p-1 hover:bg-black/10 rounded">
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          {/* Content area: truncated until hover, scroll on hover */}
+          <div
+            ref={contentRef}
+            className={`mt-0 flex-1 relative text-sm scrollbar-container ${hasOverflow ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'}`}
+            onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => {
+              // Only intercept vertical scroll when content is overflowed, so note content scrolls
+              if (hasOverflow && e.deltaY !== 0) {
+                e.stopPropagation();
+              }
+              // Horizontal scroll events will propagate to enable board panning
+            }}
+          >
+            <div className="ql-snow p-0">
+              <div
+                className="ql-editor p-0 [&_ul]:pl-2 [&_ol]:pl-2 [&_ul]:!mt-0 [&_ol]:!mt-0 [&_ul]:!mb-0 [&_ol]:!mb-0 [&_ul]:list-outside [&_ol]:list-outside"
+                style={{ margin: 0, padding: 0 }}
+                dangerouslySetInnerHTML={{ __html: note.content }}
+              />
+            </div>
+          </div>
+          {/* Ellipsis indicator for truncated content */}
+          {hasOverflow && (
+            <div className="absolute bottom-1 right-2 text-gray-400 pointer-events-none">
+              ...
+            </div>
+          )}
+        </div>
+      )}
+      {/* delete confirm modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-xl border border-gray-200">
+            <p className="text-center text-gray-900 font-semibold text-lg mb-4">
+              Are you sure you want to delete this note?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { deleteNote(note.id); setShowDeleteConfirm(false); }}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </motion.div>
   );
 };
 
