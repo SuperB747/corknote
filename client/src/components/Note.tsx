@@ -172,6 +172,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsHovered(false);
       }}
       whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
+      whileDrag={{ scale: 0.3, opacity: 0.3 }}
       style={{
         x: note.position.x,
         y: note.position.y,
