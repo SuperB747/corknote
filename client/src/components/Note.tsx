@@ -41,8 +41,9 @@ const SIZE_OPTIONS = {
   L: { width: 400, height: 400 }, // Large
 };
 
-// NOTE: adjust this constant to change editing mode width and height (e.g. set to 350 for 350px square)
-const EDIT_MODE_SIZE = 360; // px for both width and height in editing mode
+// NOTE: adjust these constants to change editing mode dimensions
+const EDIT_MODE_WIDTH = 350; // px for width in editing mode
+const EDIT_MODE_HEIGHT = 360; // px for height in editing mode
 
 // quill toolbar config for advanced editing (bullets, lists, links)
 const quillModules = {
@@ -202,8 +203,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         transformOrigin: isOverSidebar ? 'center center' : 'center center',
         zIndex: isHovered ? 9999 : note.zIndex,
         backgroundColor: color,
-        width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
-        height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
+        width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
+        height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
       }}
       drag
       dragMomentum={false}
