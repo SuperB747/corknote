@@ -5,6 +5,7 @@ import useNoteStore from '../store/noteStore';
 import { useAuth } from '../contexts/AuthContext';
 import { FolderIcon, PlusIcon, PencilIcon, TrashIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { UserProfile } from './UserProfile';
+import { getNotes } from '../services/noteService';
 
 const Sidebar: React.FC = () => {
   const { currentUser } = useAuth();
@@ -13,6 +14,7 @@ const Sidebar: React.FC = () => {
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
   const [folderToDelete, setFolderToDelete] = useState<{id: string; name: string} | null>(null);
+  const [cannotDeleteModal, setCannotDeleteModal] = useState<{name: string; count: number} | null>(null);
 
   const handleCreateFolder = async () => {
     if (!currentUser || !folderName.trim()) return;
@@ -30,7 +32,19 @@ const Sidebar: React.FC = () => {
     setFolderName('');
   };
 
-  const handleDeleteFolder = (folder: { id: string; name: string }) => {
+  const handleDeleteFolder = async (folder: { id: string; name: string }) => {
+    if (!currentUser) return;
+    try {
+      // Check if folder has any notes
+      const notes = await getNotes(currentUser.uid, folder.id);
+      if (notes.length > 0) {
+        setCannotDeleteModal({ name: folder.name, count: notes.length });
+        return;
+      }
+    } catch (err) {
+      console.error('Error checking folder contents:', err);
+      return;
+    }
     setFolderToDelete(folder);
   };
 
@@ -156,6 +170,18 @@ const Sidebar: React.FC = () => {
         ))}
       </Reorder.Group>
 
+      {cannotDeleteModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-amber-100 p-6 rounded-xl border-2 border-amber-300 shadow-2xl max-w-xs text-center font-serif">
+            <h3 className="text-xl text-amber-800 mb-3">Oops! 🍂</h3>
+            <p className="text-amber-700 mb-4">"{cannotDeleteModal.name}" board contains {cannotDeleteModal.count} note(s).<br/>Please delete all notes first.</p>
+            <button
+              onClick={() => setCannotDeleteModal(null)}
+              className="px-4 py-2 bg-amber-600 text-white rounded-full hover:bg-amber-700"
+            >Got it!</button>
+          </div>
+        </div>
+      )}
       {folderToDelete && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
           <div className="bg-white rounded-lg p-6 w-80 shadow-xl border border-gray-200">
