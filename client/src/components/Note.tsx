@@ -373,21 +373,20 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       )}
       {/* delete confirm modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
-          <div className="bg-white rounded-lg p-6 w-80 shadow-xl border border-gray-200">
-            <p className="text-center text-gray-900 font-semibold text-lg mb-4">
-              Are you sure you want to delete this note?
-            </p>
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-amber-100 p-6 rounded-xl border-2 border-amber-300 shadow-2xl max-w-xs text-center">
+            <h3 className="text-xl text-amber-800 mb-3">🍂 Confirm Delete Note</h3>
+            <p className="text-amber-700 mb-4">Are you sure you want to delete this note?</p>
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded"
+                className="px-4 py-2 bg-amber-200 hover:bg-amber-300 rounded-full"
               >
                 Cancel
               </button>
               <button
                 onClick={() => { deleteNote(note.id); setShowDeleteConfirm(false); }}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+                className="px-4 py-2 bg-amber-600 text-white hover:bg-amber-700 rounded-full"
               >
                 Delete
               </button>

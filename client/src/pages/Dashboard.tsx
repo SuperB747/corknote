@@ -68,8 +68,8 @@ const Dashboard: React.FC = () => {
         <div className="absolute inset-0 bg-cork-overlay"></div>
         {/* Floating message card */}
         <div className="relative z-10 flex flex-col items-center justify-center h-full px-4">
-          <div className="bg-amber-100/90 backdrop-blur-md p-8 rounded-xl border-2 border-amber-300 shadow-2xl max-w-md text-center font-serif">
-            <h2 className="text-3xl font-serif text-amber-800 mb-4 whitespace-nowrap">🌿 Welcome to Corknote 🌿</h2>
+          <div className="bg-amber-100/90 backdrop-blur-md p-8 rounded-xl border-2 border-amber-300 shadow-2xl max-w-md text-center">
+            <h2 className="text-3xl text-amber-800 mb-4 whitespace-nowrap">🌿 Welcome to Corknote 🌿</h2>
             <p className="text-amber-700 mb-6">You don't have any boards yet.<br/>Create your first board to get started.</p>
             <button
               onClick={() => setShowCreateModal(true)}
@@ -81,7 +81,7 @@ const Dashboard: React.FC = () => {
           {/* Custom Ghibli-style create board modal */}
           {showCreateModal && (
             <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center z-20">
-              <div className="bg-amber-100 p-8 rounded-xl border-2 border-amber-300 shadow-2xl max-w-sm w-full text-center font-serif">
+              <div className="bg-amber-100 p-8 rounded-xl border-2 border-amber-300 shadow-2xl max-w-sm w-full text-center">
                 <h3 className="text-2xl text-amber-800 mb-4">Create Your First Board</h3>
                 <input
                   type="text"
