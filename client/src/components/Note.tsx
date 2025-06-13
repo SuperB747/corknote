@@ -7,19 +7,32 @@ import { MapPinIcon } from '@heroicons/react/24/solid';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-// Bright pastel colors inspired by Ghibli
-const ghibliColors: string[] = [
-  '#FFFBEB', // amber-50
+// Ghibli-style pastel & bright color palettes
+const pastelColors: string[] = [
+  '#FCE7F3', // pink-100
+  '#FFEDD5', // orange-100
   '#FEF3C7', // amber-100
-  '#FDE68A', // amber-200
-  '#FFFBF0', // floral white
-  '#FCE7F3', // pink-50
-  '#E0F2FE', // sky-100
-  '#BAE6FD', // sky-200
-  '#ECFCCB', // lime-50
-  '#DCFCE7', // emerald-50
-  '#FFF1F3', // rose-50
+  '#FDFFE0', // yellow-50
+  '#D1FAE5', // emerald-100
+  '#D1FAFC', // cyan-100
+  '#DBEAFE', // blue-100
+  '#E0E7FF', // indigo-100
+  '#EDE9FE', // purple-100
+  '#FDF2F8', // rose-100
 ];
+const deepColors: string[] = [
+  '#F9A8D4', // pink-300
+  '#FB923C', // orange-400
+  '#FCD34D', // yellow-300
+  '#60A5FA', // blue-400
+  '#34D399', // emerald-400
+  '#5EEAD4', // cyan-300
+  '#818CF8', // indigo-400
+  '#A78BFA', // purple-400
+  '#FF6B6B', // coral-400
+  '#FDBA74', // amber-300
+];
+const allColors = [...pastelColors, ...deepColors];
 
 // NOTE: adjust these values (px) to change note sizes
 const SIZE_OPTIONS = {
@@ -123,7 +136,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   // new note random default color on initial edit mode
   useEffect(() => {
     if (initialEditing) {
-      const randomColor = ghibliColors[Math.floor(Math.random() * ghibliColors.length)];
+      const randomColor = allColors[Math.floor(Math.random() * allColors.length)];
       setColor(randomColor);
     }
   }, [initialEditing]);
@@ -289,10 +302,21 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
                 />
               </div>
             </div>
+            {/* Color picker: pastel then deep rows */}
             <div className="flex justify-center flex-wrap gap-1 py-1">
-              {ghibliColors.map((hex, idx) => (
+              {pastelColors.map((hex, idx) => (
                 <button
-                  key={idx}
+                  key={`pastel-${idx}`}
+                  className={`w-6 h-6 rounded-full border ${color === hex ? 'border-black' : 'border-gray-300'}`}
+                  style={{ backgroundColor: hex }}
+                  onClick={() => setColor(hex)}
+                />
+              ))}
+            </div>
+            <div className="flex justify-center flex-wrap gap-1 pb-1">
+              {deepColors.map((hex, idx) => (
+                <button
+                  key={`deep-${idx}`}
                   className={`w-6 h-6 rounded-full border ${color === hex ? 'border-black' : 'border-gray-300'}`}
                   style={{ backgroundColor: hex }}
                   onClick={() => setColor(hex)}
