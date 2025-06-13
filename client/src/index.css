@@ -64,4 +64,10 @@ body {
 /* Disable overscroll bounce globally */
 html, body, #root {
   overscroll-behavior: none;
+}
+
+/* Quill editor container: fixed height for editing white area and enable scroll */
+.ql-container.ql-snow {
+  height: 180px !important;
+  overflow-y: auto !important;
 } 

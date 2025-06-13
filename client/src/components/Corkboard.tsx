@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { ArrowsRightLeftIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { ArrowsRightLeftIcon, ArrowDownTrayIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import useNoteStore from '../store/noteStore';
 import Note from './Note';
 import FirebaseUsageMonitor from './FirebaseUsageMonitor';
@@ -174,7 +174,8 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
         <span className="text-sm font-medium">{`${boardName} (${folderNotes.length} notes)`}</span>
         <span className="text-gray-400">|</span>
         <label className="inline-flex items-center cursor-pointer">
-          <span className="text-sm mr-1">OCD</span>
+          <SparklesIcon className="w-5 h-5 mr-1 text-current" />
+          <span className="text-sm mr-1">Tidy Mode</span>
           <div className="relative">
             <input
               type="checkbox"
@@ -182,8 +183,8 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               onChange={() => updateFolderSettings(selectedFolderId as string, !ocdEnabled)}
               className="sr-only"
             />
-            <div className="w-8 h-4 bg-gray-300 rounded-full"></div>
-            <div className={`absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow transform transition ${ocdEnabled ? 'translate-x-4' : ''}`}></div>
+            <div className={`w-8 h-4 rounded-full transition-colors ${ocdEnabled ? 'bg-[#7B61FF]' : 'bg-gray-300'}`}></div>
+            <div className={`absolute top-0 left-0 w-4 h-4 bg-white rounded-full shadow transition-transform ${ocdEnabled ? 'translate-x-4' : ''}`}></div>
           </div>
         </label>
         <span className="text-gray-400">|</span>

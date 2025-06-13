@@ -28,8 +28,8 @@ const SIZE_OPTIONS = {
   L: { width: 400, height: 400 }, // Large
 };
 
-// NOTE: adjust this to change editing mode size
-const EDIT_MODE_SIZE = 350; // px
+// NOTE: adjust this constant to change editing mode width and height (e.g. set to 350 for 350px square)
+const EDIT_MODE_SIZE = 350; // px for both width and height in editing mode
 
 // quill toolbar config for advanced editing (bullets, lists, links)
 const quillModules = {
@@ -159,7 +159,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       onTap={() => removeHighlightNote(note.id)}
       transition={{ default: { duration: 0 } }}
       initial={false}
-      className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
+      className="note-draggable absolute rounded-2xl shadow-note overflow-hidden"
       onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
       onHoverStart={() => {
         if (isEditing) return;
@@ -259,17 +259,18 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               </label>
             ))}
           </div>
-          {/* Editor container: flexible content area with scroll, controls fixed at bottom */}
-          <div className="flex flex-col h-full">
-            {/* Note editing inner padding: title and editor area */}
-            <div className="flex flex-col flex-1 p-1">
+          {/* Editor container: adjust 'h-full' to change overall editor height (e.g. use 'h-[500px]' for 500px height) */}
+          <div className="flex flex-col h-full min-h-0">
+            {/* Note editing inner padding: adjust 'min-h-0' to set minimum editor area height (e.g. 'min-h-[200px]') */}
+            <div className="flex flex-col flex-1 p-1 overflow-hidden min-h-0">
               <input
                 className="w-full bg-transparent border-b border-gray-400 focus:outline-none"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onFocus={() => initialEditing && title === note.title && setTitle('')}
               />
-              <div className="mt-2 flex-1 overflow-auto overscroll-none scrollbar-container">
+              {/* Editor scrollable area: adjust the h-[400px] below to change visible editor height (e.g. h-[400px] for 5 more lines) */}
+              <div className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container">
                 {/* @ts-ignore */}
                 <ReactQuill
                   theme="snow"
@@ -277,7 +278,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
                   onChange={setContent}
                   modules={quillModules}
                   formats={quillFormats}
-                  className="h-full"
                 />
               </div>
             </div>
