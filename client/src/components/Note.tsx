@@ -7,23 +7,19 @@ import { MapPinIcon } from '@heroicons/react/24/solid';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-// Neon Post-it colors (hex codes)
-const neonColors: Record<string, string> = {
-  yellow: '#ffff00',
-  green: '#00ff00',
-  pink: '#ff69b4',
-  orange: '#ff8c00',
-  blue: '#00ffff',
-};
-
-// Pastel Post-it colors (hex codes)
-const pastelColors: Record<string, string> = {
-  yellow: '#fff7c0',
-  green: '#c8f7c5',
-  pink: '#ffcfe0',
-  blue: '#c5e7f7',
-  purple: '#e7c5f7',
-};
+// Ghibli style colors
+const ghibliColors: string[] = [
+  '#F9EDD0', // pale cream
+  '#E9CFC6', // soft pink
+  '#D68D6E', // terra cotta
+  '#F4D06F', // mustard
+  '#A3B18A', // sage green
+  '#86C0B2', // sea green
+  '#C5D5EA', // sky blue
+  '#5C4D7D', // dark violet
+  '#58595B', // muted grey
+  '#B2A190', // beige grey
+];
 
 // NOTE: adjust these values (px) to change note sizes
 const SIZE_OPTIONS = {
@@ -119,8 +115,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   // new note random default color on initial edit mode
   useEffect(() => {
     if (initialEditing) {
-      const allColors = [...Object.values(neonColors), ...Object.values(pastelColors)];
-      const randomColor = allColors[Math.floor(Math.random() * allColors.length)];
+      const randomColor = ghibliColors[Math.floor(Math.random() * ghibliColors.length)];
       setColor(randomColor);
     }
   }, [initialEditing]);
@@ -189,7 +184,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].height,
       }}
-      drag={!isEditing}
+      drag
       dragMomentum={false}
       onDragStart={() => {
         setIsDragging(true);
@@ -274,7 +269,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
                 onChange={(e) => setTitle(e.target.value)}
                 onFocus={() => initialEditing && title === note.title && setTitle('')}
               />
-              <div className="mt-2 flex-1 overflow-auto scrollbar-container">
+              <div className="mt-2 flex-1 overflow-auto overscroll-none scrollbar-container">
                 {/* @ts-ignore */}
                 <ReactQuill
                   theme="snow"
@@ -287,7 +282,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               </div>
             </div>
             <div className="flex justify-center flex-wrap gap-1 py-1">
-              {[...Object.values(neonColors), ...Object.values(pastelColors)].map((hex, idx) => (
+              {ghibliColors.map((hex, idx) => (
                 <button
                   key={idx}
                   className={`w-6 h-6 rounded-full border ${color === hex ? 'border-black' : 'border-gray-300'}`}
@@ -343,7 +338,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           {/* Content area: truncated until hover, scroll on hover */}
           <div
             ref={contentRef}
-            className={`mt-0 flex-1 relative text-sm scrollbar-container ${hasOverflow ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'}`}
+            className={`mt-0 flex-1 relative text-sm scrollbar-container ${hasOverflow ? 'overflow-y-auto overscroll-none' : 'overflow-hidden'}`}
             onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => {
               // Only intercept vertical scroll when content is overflowed, so note content scrolls
               if (hasOverflow && e.deltaY !== 0) {

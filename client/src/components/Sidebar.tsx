@@ -8,7 +8,7 @@ import { UserProfile } from './UserProfile';
 
 const Sidebar: React.FC = () => {
   const { currentUser } = useAuth();
-  const { folders, selectedFolderId, setSelectedFolder, createFolder, updateFolder, deleteFolder, reorderFolders } = useNoteStore();
+  const { folders, selectedFolderId, setSelectedFolder, createFolder, updateFolder, deleteFolder, reorderFolders, isDragging } = useNoteStore();
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
@@ -48,7 +48,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div id="sidebar" className="relative z-20 w-64 bg-amber-50 border-r border-amber-200 p-4 flex flex-col h-full shadow-xl">
+    <div id="sidebar" className="relative z-20 w-64 bg-amber-50 border-r border-amber-200 p-4 flex flex-col h-full">
       {currentUser && (
         <div className="mb-6 p-3 bg-amber-200 rounded-lg text-amber-800 text-sm border border-amber-300 shadow-md">
           <UserProfile user={currentUser} />
@@ -96,13 +96,15 @@ const Sidebar: React.FC = () => {
         </div>
       )}
 
-      <Reorder.Group initial={false} axis="y" values={folders} onReorder={reorderFolders} className="space-y-2 flex-1 overflow-y-auto overscroll-contain scrollbar-container">
+      <Reorder.Group initial={false} axis="y" values={folders} onReorder={reorderFolders} className="space-y-2 flex-1 overflow-y-auto overscroll-none scrollbar-container">
         {folders.map((folder) => (
-          <Reorder.Item initial={false}
+          <Reorder.Item
+            initial={false}
             key={folder.id}
             data-folder-id={folder.id}
             value={folder}
             onClick={() => setSelectedFolder(folder.id)}
+            dragListener={!isDragging}
             className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
               selectedFolderId === folder.id
                 ? 'bg-amber-300 border-amber-600 text-amber-800 font-semibold'

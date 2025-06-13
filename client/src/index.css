@@ -59,4 +59,9 @@ body {
 .note-draggable h3,
 .note-draggable p {
   text-rendering: optimizeLegibility;
+}
+
+/* Disable overscroll bounce globally */
+html, body, #root {
+  overscroll-behavior: none;
 } 

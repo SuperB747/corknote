@@ -167,7 +167,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 overflow-visible"
+      className="absolute inset-0 overflow-visible overscroll-none"
     >
       {/* Compact floating toolbar */}
       <div className="no-drag absolute top-4 right-4 bg-white/70 backdrop-blur-md rounded-md px-4 py-2 shadow-md flex items-center space-x-2 z-50">
@@ -199,7 +199,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
       </div>
       <div 
         ref={corkboardRef}
-        className="absolute inset-0"
+        className="absolute inset-0 overscroll-none"
         style={{ 
           cursor: isDragging ? 'grabbing' : 'grab',
           touchAction: 'none'
