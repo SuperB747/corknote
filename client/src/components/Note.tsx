@@ -42,7 +42,7 @@ const SIZE_OPTIONS = {
 };
 
 // NOTE: adjust this constant to change editing mode width and height (e.g. set to 350 for 350px square)
-const EDIT_MODE_SIZE = 350; // px for both width and height in editing mode
+const EDIT_MODE_SIZE = 360; // px for both width and height in editing mode
 
 // quill toolbar config for advanced editing (bullets, lists, links)
 const quillModules = {
@@ -281,7 +281,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
             ))}
           </div>
           {/* Editor container: adjust 'h-full' to change overall editor height (e.g. use 'h-[500px]' for 500px height) */}
-          <div className="flex flex-col h-full min-h-0">
+          <div className="flex flex-col h-[360px] min-h-0">
             {/* Note editing inner padding: adjust 'min-h-0' to set minimum editor area height (e.g. 'min-h-[200px]') */}
             <div className="flex flex-col flex-1 p-1 overflow-hidden min-h-0">
               <input
