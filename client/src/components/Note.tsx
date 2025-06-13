@@ -7,18 +7,18 @@ import { MapPinIcon } from '@heroicons/react/24/solid';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-// Ghibli style colors
+// Bright pastel colors inspired by Ghibli
 const ghibliColors: string[] = [
-  '#F9EDD0', // pale cream
-  '#E9CFC6', // soft pink
-  '#D68D6E', // terra cotta
-  '#F4D06F', // mustard
-  '#A3B18A', // sage green
-  '#86C0B2', // sea green
-  '#C5D5EA', // sky blue
-  '#5C4D7D', // dark violet
-  '#58595B', // muted grey
-  '#B2A190', // beige grey
+  '#FFFBEB', // amber-50
+  '#FEF3C7', // amber-100
+  '#FDE68A', // amber-200
+  '#FFFBF0', // floral white
+  '#FCE7F3', // pink-50
+  '#E0F2FE', // sky-100
+  '#BAE6FD', // sky-200
+  '#ECFCCB', // lime-50
+  '#DCFCE7', // emerald-50
+  '#FFF1F3', // rose-50
 ];
 
 // NOTE: adjust these values (px) to change note sizes
