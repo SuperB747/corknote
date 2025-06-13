@@ -37,6 +37,9 @@ interface NoteStore {
   error: string | null;
   isDragging: boolean;
   setDragging: (value: boolean) => void;
+  highlightedNoteIds: string[];
+  addHighlightNote: (noteId: string) => void;
+  removeHighlightNote: (noteId: string) => void;
 
   // Folder actions
   loadFolders: (userId: string) => Promise<void>;
@@ -81,6 +84,12 @@ const useNoteStore = create<NoteStore>((set, get) => {
     error: null,
     isDragging: false,
     setDragging: (value: boolean) => set({ isDragging: value }),
+    highlightedNoteIds: [],
+    addHighlightNote: (noteId: string) => {
+      set(state => ({ highlightedNoteIds: [...state.highlightedNoteIds, noteId] }));
+      setTimeout(() => { get().removeHighlightNote(noteId); }, 10000);
+    },
+    removeHighlightNote: (noteId: string) => set(state => ({ highlightedNoteIds: state.highlightedNoteIds.filter(id => id !== noteId) })),
 
     // Folder actions
     loadFolders: async (userId: string) => {
@@ -198,6 +207,7 @@ const useNoteStore = create<NoteStore>((set, get) => {
           const updated = [...state.notes, newNote];
           // update cache
           notesCache[selectedFolderId] = updated;
+          get().addHighlightNote(newNote.id);
           return { notes: updated, isLoading: false };
         });
         return newNote;
@@ -304,6 +314,7 @@ const useNoteStore = create<NoteStore>((set, get) => {
         } else {
           set({ isLoading: false });
         }
+        get().addHighlightNote(noteId);
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
       }

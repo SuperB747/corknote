@@ -71,8 +71,8 @@ node_modules/
 # === CRA client build and dependencies ===
 client/node_modules/
 client/build/
-client/.env*
 client/.DS_Store
+client/.env.local
 
 # macOS file
 .DS_Store

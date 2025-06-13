@@ -15,7 +15,7 @@ interface CorkboardProps {
   onNewNoteHandled?: () => void;
 }
 const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) => {
-  const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation, moveNoteToFolder } = useNoteStore();
+  const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation, moveNoteToFolder, setSelectedFolder } = useNoteStore();
   const corkboardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   // Reset pan position when switching boards
@@ -226,7 +226,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               initialEditing={note.id === newNoteId}
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
-              onDragEnd={(_, info) => {
+              onDragEnd={async (_, info) => {
                 // update position on board
                 const newX = note.position.x + info.offset.x;
                 const newY = note.position.y + info.offset.y;
@@ -238,12 +238,15 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
                   if (folderElem) {
                     const newFolderId = folderElem.getAttribute('data-folder-id');
                     if (newFolderId && newFolderId !== selectedFolderId) {
-                      // Compute default center position on board
-                      const cx = containerSize.width / 2 - NOTE_WIDTH / 2;
-                      const cy = containerSize.height / 2 - NOTE_HEIGHT / 2;
-                      const defaultX = cx - viewportPosition.x;
-                      const defaultY = cy - viewportPosition.y;
-                      moveNoteToFolder(note.id, newFolderId, { x: defaultX, y: defaultY });
+                      // Compute random position within current viewport bounds
+                      const viewX = -viewportPosition.x;
+                      const viewY = -viewportPosition.y;
+                      const maxX = Math.max(0, containerSize.width - NOTE_WIDTH);
+                      const maxY = Math.max(0, containerSize.height - NOTE_HEIGHT);
+                      const xRandom = viewX + Math.random() * maxX;
+                      const yRandom = viewY + Math.random() * maxY;
+                      await moveNoteToFolder(note.id, newFolderId, { x: xRandom, y: yRandom });
+                      setSelectedFolder(newFolderId);
                     }
                   }
                 }

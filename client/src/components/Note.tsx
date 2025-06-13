@@ -67,6 +67,9 @@ interface NoteProps {
 const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
   const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
   const setDragging = useNoteStore(state => state.setDragging);
+  const highlightedNoteIds = useNoteStore(state => state.highlightedNoteIds);
+  const isHighlighted = highlightedNoteIds.includes(note.id);
+  const removeHighlightNote = useNoteStore(state => state.removeHighlightNote);
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
@@ -158,6 +161,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
 
   return (
     <motion.div
+      onTap={() => removeHighlightNote(note.id)}
       transition={{ default: { duration: 0 } }}
       initial={false}
       className={`note-draggable absolute rounded-lg shadow-lg ${isEditing ? 'overflow-y-auto' : 'overflow-hidden'}`}
@@ -173,13 +177,13 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         setIsHovered(false);
       }}
       whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
-      whileDrag={isOverSidebar ? { scale: 0.8, opacity: 0.1 } : undefined}
+      whileDrag={isOverSidebar ? { scale: 0.8, opacity: 0.3 } : undefined}
       style={{
         pointerEvents: isOverSidebar ? 'none' : 'auto',
         x: note.position.x,
         y: note.position.y,
         rotate: rotation,
-        transformOrigin: isOverSidebar ? 'left center' : 'center center',
+        transformOrigin: isOverSidebar ? 'center center' : 'center center',
         zIndex: isHovered ? 9999 : note.zIndex,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_SIZE : SIZE_OPTIONS[selectedSize].width,
@@ -215,6 +219,16 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         // After dragging, remain in view mode (don't enter editing)
       }}
     >
+      {/* Highlight flash effect for new/moved notes */}
+      {isHighlighted && (
+        <motion.div
+          className="absolute inset-0 rounded-lg pointer-events-none"
+          initial={{ opacity: 0.8 }}
+          animate={{ opacity: [0.8, 0, 0.8] }}
+          transition={{ duration: 1, repeat: 9, ease: 'easeInOut' }}
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', zIndex: 9999 }}
+        />
+      )}
       {/* Pin animation: hide while dragging, show on drop with random color */}
       {!isDragging && (
         <motion.div
