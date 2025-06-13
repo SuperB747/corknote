@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion, Reorder } from 'framer-motion';
 import useNoteStore from '../store/noteStore';
 import { useAuth } from '../contexts/AuthContext';
-import { FolderIcon, PlusIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { FolderIcon, PlusIcon, PencilIcon, TrashIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { UserProfile } from './UserProfile';
 
 const Sidebar: React.FC = () => {
@@ -83,10 +83,16 @@ const Sidebar: React.FC = () => {
             value={folderName}
             onChange={(e) => setFolderName(e.target.value)}
             placeholder="Folder name"
-            className="flex-1 px-3 py-2 border rounded-md"
+            className="flex-1 min-w-0 px-2 py-2 border rounded-md"
             onKeyPress={(e) => e.key === 'Enter' && handleCreateFolder()}
             autoFocus
           />
+          <button
+            onClick={handleCreateFolder}
+            className="p-1 hover:bg-gray-100 rounded-full"
+          >
+            <CheckIcon className="w-4 h-4 text-amber-600" />
+          </button>
           <button
             onClick={() => { setIsCreatingFolder(false); setFolderName(''); }}
             className="p-1 hover:bg-gray-100 rounded-full"

@@ -7,7 +7,7 @@ process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
 process.env.FIREBASE_STORAGE_EMULATOR_HOST = 'localhost:9199';
 
 initializeApp({
-  projectId: 'corknote-local'
+  projectId: 'corknote'
 });
 
 const db = getFirestore();

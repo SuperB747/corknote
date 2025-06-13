@@ -18,6 +18,9 @@ const Dashboard: React.FC = () => {
     isLoading
   } = useNoteStore();
   const [newNoteId, setNewNoteId] = useState<string | null>(null);
+  // Welcome modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [welcomeFolderName, setWelcomeFolderName] = useState('');
 
   useEffect(() => {
     if (currentUser && folders.length > 0 && !selectedFolderId) {
@@ -48,6 +51,15 @@ const Dashboard: React.FC = () => {
     }
   }, [currentUser, selectedFolderId, loadNotes]);
 
+  // Handle board creation from welcome modal
+  const handleWelcomeCreate = async () => {
+    if (welcomeFolderName.trim() && currentUser) {
+      await createFolder(currentUser.uid, welcomeFolderName.trim());
+      setWelcomeFolderName('');
+      setShowCreateModal(false);
+    }
+  };
+
   if (!isLoading && folders.length === 0) {
     return (
       <div className="h-full relative overflow-visible">
@@ -56,21 +68,39 @@ const Dashboard: React.FC = () => {
         <div className="absolute inset-0 bg-cork-overlay"></div>
         {/* Floating message card */}
         <div className="relative z-10 flex flex-col items-center justify-center h-full px-4">
-          <div className="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-lg max-w-sm text-center">
-            <h2 className="text-2xl font-bold mb-4">Welcome to Corknote!</h2>
-            <p className="text-gray-700 mb-6">You don't have any boards yet.<br/>Create your first board to get started.</p>
+          <div className="bg-amber-100/90 backdrop-blur-md p-8 rounded-xl border-2 border-amber-300 shadow-2xl max-w-md text-center font-serif">
+            <h2 className="text-3xl font-serif text-amber-800 mb-4 whitespace-nowrap">🌿 Welcome to Corknote 🌿</h2>
+            <p className="text-amber-700 mb-6">You don't have any boards yet.<br/>Create your first board to get started.</p>
             <button
-              onClick={async () => {
-                const name = window.prompt('Enter board name');
-                if (name && currentUser) {
-                  await createFolder(currentUser.uid, name.trim());
-                }
-              }}
-              className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none"
+              onClick={() => setShowCreateModal(true)}
+              className="bg-amber-600 text-white py-3 px-6 rounded-full hover:bg-amber-700 focus:outline-none shadow-md transition"
             >
               Create Board
             </button>
           </div>
+          {/* Custom Ghibli-style create board modal */}
+          {showCreateModal && (
+            <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center z-20">
+              <div className="bg-amber-100 p-8 rounded-xl border-2 border-amber-300 shadow-2xl max-w-sm w-full text-center font-serif">
+                <h3 className="text-2xl text-amber-800 mb-4">Create Your First Board</h3>
+                <input
+                  type="text"
+                  value={welcomeFolderName}
+                  onChange={(e) => setWelcomeFolderName(e.target.value)}
+                  placeholder="Board Name"
+                  className="w-full p-2 mb-4 rounded border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+                <div className="flex justify-center gap-4">
+                  <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                    Cancel
+                  </button>
+                  <button onClick={handleWelcomeCreate} className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700">
+                    Create
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
