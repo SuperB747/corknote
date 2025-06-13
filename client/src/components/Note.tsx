@@ -103,6 +103,14 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     }
   }, [isEditing]);
 
+  // Disable hover effects when editing mode is enabled
+  useEffect(() => {
+    if (isEditing) {
+      setIsHovered(false);
+      setDisableHover(true);
+    }
+  }, [isEditing]);
+
   // if initialEditing prop becomes true, enter edit mode
   useEffect(() => {
     if (initialEditing) {
