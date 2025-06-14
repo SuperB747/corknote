@@ -7,7 +7,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="h-screen flex overflow-hidden overscroll-none">
       <Sidebar />
-      <main className={`flex-1 relative ${isDragging ? 'z-30' : ''}`}>
+      <main className="flex-1 relative ml-64">
         {children}
       </main>
     </div>

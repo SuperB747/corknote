@@ -170,12 +170,14 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const handleDragEnd = (event: any, info: any) => {
     setIsDragging(false);
     setDragging(false);
+    setIsOverSidebar(false);
     onDragEnd?.(event, info);
     // re-pin: new color and re-trigger animation
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
     setPinKey((k: number) => k + 1);
   };
 
+  // Render note component directly; dragRootElement handles portal for dragging
   return (
     <motion.div
       onTap={() => removeHighlightNote(note.id)}
@@ -200,15 +202,16 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         x: note.position.x,
         y: note.position.y,
         rotate: rotation,
-        transformOrigin: isOverSidebar ? 'center center' : 'center center',
-        zIndex: isHovered ? 9999 : note.zIndex,
+        transformOrigin: 'center center',
+        zIndex: isDragging ? 9999 : (isHovered ? 9999 : note.zIndex),
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
       }}
       drag
+      dragRootElement={() => document.body}
       dragMomentum={false}
-      onDragStart={() => {
+      onDragStart={(e: any, info: any) => {
         setIsDragging(true);
         setDragging(true);
         setDisableHover(true);
@@ -241,7 +244,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         <motion.div
           className="absolute inset-0 rounded-lg pointer-events-none"
           initial={{ opacity: 0.8 }}
-          animate={{ opacity: [0.8, 0, 0.8] }}
+          animate={{ opacity: [1, 0, 1] }}
           transition={{ duration: 1, repeat: 9, ease: 'easeInOut' }}
           style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', zIndex: 9999 }}
         />
