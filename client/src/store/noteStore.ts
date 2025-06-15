@@ -314,7 +314,6 @@ const useNoteStore = create<NoteStore>((set, get) => {
         } else {
           set({ isLoading: false });
         }
-        get().addHighlightNote(noteId);
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
       }

@@ -68,7 +68,7 @@ const pinColors = ['#e53e3e', '#d69e2e', '#38a169', '#3182ce', '#805ad5', '#d53f
 
 interface NoteProps {
   note: Note;
-  rotation?: number;  // rotation angle in degrees
+  rotation?: number;
   initialEditing?: boolean;
   onNewNoteHandled?: () => void;
   onDragEnd?: (event: any, info: any) => void;
@@ -88,21 +88,15 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [isHovered, setIsHovered] = useState(false);
   const [disableHover, setDisableHover] = useState(false);
   const [isOverSidebar, setIsOverSidebar] = useState(false);
-  // S, M, L size selection
-  const defaultSize = note.sizeCategory as 'S'|'M'|'L';
-  const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(defaultSize);
-  // store previous size to revert on cancel
-  const prevSizeRef = useRef<'S'|'M'|'L'>(defaultSize);
-  // delete confirmation modal
+  
+  const prevSizeRef = useRef<'S'|'M'|'L'>(note.sizeCategory as 'S'|'M'|'L');
+  const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(note.sizeCategory as 'S'|'M'|'L');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  // pin state: color and key to re-trigger animation
   const [pinColor, setPinColor] = useState(pinColors[Math.floor(Math.random() * pinColors.length)]);
   const [pinKey, setPinKey] = useState(0);
-  // Ref & state for detecting overflow in view mode
   const contentRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
 
-  // when entering edit mode, reset selectedSize to current note size
   useEffect(() => {
     if (isEditing) {
       setSelectedSize(note.sizeCategory as 'S'|'M'|'L');
@@ -110,14 +104,12 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     }
   }, [isEditing, note.sizeCategory]);
 
-  // Bring this note to front when editing
   useEffect(() => {
     if (isEditing) {
       updateNotePosition(note.id, note.position);
     }
   }, [isEditing]);
 
-  // Disable hover effects when editing mode is enabled
   useEffect(() => {
     if (isEditing) {
       setIsHovered(false);
@@ -125,16 +117,13 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     }
   }, [isEditing]);
 
-  // if initialEditing prop becomes true, enter edit mode
   useEffect(() => {
     if (initialEditing) {
       setIsEditing(true);
-      // clear content prompt for new note
       setContent('');
     }
   }, [initialEditing]);
 
-  // new note random default color on initial edit mode
   useEffect(() => {
     if (initialEditing) {
       const randomColor = allColors[Math.floor(Math.random() * allColors.length)];
@@ -150,11 +139,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   }, [note.content]);
 
   const handleSave = () => {
-    // apply selected note size
     updateNoteSize(note.id, selectedSize);
-    // persist title/content/color
     updateNote(note.id, { title, content, color });
-    // if this was a newly created note, assign random rotation and notify parent
     if (initialEditing) {
       const angle = (Math.random() * 2 - 1) * MAX_ROTATION;
       updateNoteRotation(note.id, angle);
@@ -167,47 +153,64 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     setShowDeleteConfirm(true);
   };
 
-  const handleDragEnd = (event: any, info: any) => {
+  const handleInternalDragEnd = (event: any, info: any) => {
     setIsDragging(false);
     setDragging(false);
+    setDisableHover(true);
     setIsOverSidebar(false);
     onDragEnd?.(event, info);
-    // re-pin: new color and re-trigger animation
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
     setPinKey((k: number) => k + 1);
   };
 
-  // Render note component directly; dragRootElement handles portal for dragging
   return (
     <motion.div
       onTap={() => removeHighlightNote(note.id)}
-      transition={{ default: { duration: 0 } }}
       initial={false}
-      className="note-draggable absolute rounded-2xl shadow-note overflow-hidden"
+      className={`note-draggable absolute rounded-2xl shadow-note overflow-hidden ${isHighlighted ? 'highlight-animate' : ''}`}
       onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
-      onHoverStart={() => {
-        if (isEditing) return;
-        if (disableHover) {
-          setDisableHover(false);
-        }
-        setIsHovered(true);
-      }}
-      onHoverEnd={() => {
+      onPointerDown={() => {
+        setDisableHover(true);
         setIsHovered(false);
       }}
-      whileHover={disableHover || isEditing ? undefined : { scale: 1.15 }}
-      whileDrag={isOverSidebar ? { scale: 0.8, opacity: 0.3 } : undefined}
+      onPointerEnter={() => {
+        if (disableHover) setDisableHover(false);
+      }}
+      onHoverStart={() => {
+        if (isHighlighted) removeHighlightNote(note.id);
+        if (isEditing || disableHover || isDragging) return;
+        setIsHovered(true);
+      }}
+      onPointerLeave={() => {
+        setIsHovered(false);
+      }}
+      whileHover={disableHover || isEditing || isDragging ? undefined : { scale: 1.1, zIndex: 10000, transition: { duration: 0.1, ease: 'easeInOut' } }}
+      whileDrag={isOverSidebar
+        ? { scale: 0.8, opacity: 0.3 }
+        : (disableHover || isDragging)
+          ? { scale: 1, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }
+          : { scale: 1.1, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
       style={{
         pointerEvents: isOverSidebar ? 'none' : 'auto',
         x: note.position.x,
         y: note.position.y,
         rotate: rotation,
         transformOrigin: 'center center',
-        zIndex: isDragging ? 9999 : (isHovered ? 9999 : note.zIndex),
+        zIndex: (isDragging || isHighlighted || isHovered) ? 9999 : note.zIndex,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
       }}
+      animate={isHighlighted ? { scale: [0.8, 1] } : { scale: 1 }}
+      transition={{
+        default: { duration: 0 },
+        scale: isHighlighted
+          ? { duration: 0.15, repeat: 5, repeatType: 'reverse', ease: 'easeInOut' }
+          : isHovered
+            ? { duration: 0.1, ease: 'easeInOut' }
+            : { duration: 0.05, ease: 'easeInOut' }
+      }}
+      onAnimationComplete={() => { if (isHighlighted) removeHighlightNote(note.id); }}
       drag
       dragRootElement={() => document.body}
       dragMomentum={false}
@@ -228,28 +231,16 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
             info.point.x <= rect.right &&
             info.point.y >= rect.top &&
             info.point.y <= rect.bottom;
-          setIsOverSidebar(over);
+          if (over !== isOverSidebar) {
+            setIsOverSidebar(over);
+          }
         }
       }}
-      onDragEnd={(e: any, info: any) => {
-        setIsDragging(false);
-        setDragging(false);
-        setIsOverSidebar(false);
-        onDragEnd?.(e, info);
-        // After dragging, remain in view mode (don't enter editing)
-      }}
+      onDragEnd={handleInternalDragEnd}
     >
-      {/* Highlight flash effect for new/moved notes */}
       {isHighlighted && (
-        <motion.div
-          className="absolute inset-0 rounded-lg pointer-events-none"
-          initial={{ opacity: 0.8 }}
-          animate={{ opacity: [1, 0, 1] }}
-          transition={{ duration: 1, repeat: 9, ease: 'easeInOut' }}
-          style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', zIndex: 9999 }}
-        />
+        <div className="absolute inset-0 rounded-2xl pointer-events-none border-4 border-yellow-300 animate-ping" style={{ zIndex: 10000 }} />
       )}
-      {/* Pin animation: hide while dragging, show on drop with random color */}
       {!isDragging && (
         <motion.div
           key={pinKey}
@@ -261,11 +252,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           <MapPinIcon className="w-6 h-6" style={{ color: pinColor }} />
         </motion.div>
       )}
-
-      {/* Content */}
       {isEditing ? (
         <>
-          {/* Size selector overlay */}
           <div className="absolute top-2 right-2 flex items-center gap-2 bg-transparent p-1 rounded">
             {(['S','M','L'] as const).map(key => (
               <label key={key} className="inline-flex items-center gap-1 text-sm cursor-pointer">
@@ -284,9 +272,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               </label>
             ))}
           </div>
-          {/* Editor container: adjust 'h-full' to change overall editor height (e.g. use 'h-[500px]' for 500px height) */}
           <div className="flex flex-col h-[360px] min-h-0">
-            {/* Note editing inner padding: adjust 'min-h-0' to set minimum editor area height (e.g. 'min-h-[200px]') */}
             <div className="flex flex-col flex-1 p-1 overflow-hidden min-h-0">
               <input
                 className="w-full bg-transparent border-b border-gray-400 focus:outline-none"
@@ -294,9 +280,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
                 onChange={(e) => setTitle(e.target.value)}
                 onFocus={() => initialEditing && title === note.title && setTitle('')}
               />
-              {/* Editor scrollable area: adjust the h-[400px] below to change visible editor height (e.g. h-[400px] for 5 more lines) */}
               <div className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container">
-                {/* @ts-ignore */}
                 <ReactQuill
                   theme="snow"
                   value={content}
@@ -306,7 +290,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
                 />
               </div>
             </div>
-            {/* Color picker: pastel then deep rows */}
             <div className="flex justify-center flex-wrap gap-1 py-1">
               {pastelColors.map((hex, idx) => (
                 <button
@@ -359,7 +342,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         </>
       ) : (
         <div className="p-2 flex flex-col h-full relative">
-          {/* Header: title and action buttons */}
           <div className="mt-3 mb-1 flex justify-between items-start shrink-0">
             <h3 className="font-medium text-lg truncate">{note.title}</h3>
             <div className="flex gap-2">
@@ -371,54 +353,46 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               </button>
             </div>
           </div>
-          {/* Content area: truncated until hover, scroll on hover */}
           <div
             ref={contentRef}
             className={`mt-0 flex-1 relative text-sm scrollbar-container ${hasOverflow ? 'overflow-y-auto overscroll-none' : 'overflow-hidden'}`}
             onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => {
-              // Only intercept vertical scroll when content is overflowed, so note content scrolls
               if (hasOverflow && e.deltaY !== 0) {
                 e.stopPropagation();
               }
-              // Horizontal scroll events will propagate to enable board panning
             }}
           >
-            <div className="ql-snow p-0">
-              <div
-                className="ql-editor p-0 [&_ul]:pl-2 [&_ol]:pl-2 [&_ul]:!mt-0 [&_ol]:!mt-0 [&_ul]:!mb-0 [&_ol]:!mb-0 [&_ul]:list-outside [&_ol]:list-outside"
-                style={{ margin: 0, padding: 0 }}
-                dangerouslySetInnerHTML={{ __html: note.content }}
-              />
-            </div>
+            <div
+              className="quill-content-view"
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
           </div>
-          {/* Ellipsis indicator for truncated content */}
           {hasOverflow && (
-            <div className="absolute bottom-1 right-2 text-gray-400 pointer-events-none">
-              ...
+            <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white/50 backdrop-blur-sm px-1 rounded">
+              scroll
             </div>
           )}
         </div>
       )}
-      {/* delete confirm modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-amber-100 p-6 rounded-xl border-2 border-amber-300 shadow-2xl max-w-xs text-center">
-            <h3 className="text-xl text-amber-800 mb-3">🍂 Confirm Delete Note</h3>
-            <p className="text-amber-700 mb-4">Are you sure you want to delete this note?</p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-amber-200 hover:bg-amber-300 rounded-full"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => { deleteNote(note.id); setShowDeleteConfirm(false); }}
-                className="px-4 py-2 bg-amber-600 text-white hover:bg-amber-700 rounded-full"
-              >
-                Delete
-              </button>
-            </div>
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+          <p className="font-semibold mb-2">Delete this note?</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                deleteNote(note.id);
+                setShowDeleteConfirm(false);
+              }}
+              className="px-3 py-1 bg-red-500 text-white rounded-md"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="px-3 py-1 bg-gray-200 rounded-md"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -426,4 +400,4 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   );
 };
 
-export default NoteComponent; 
+export default NoteComponent;
