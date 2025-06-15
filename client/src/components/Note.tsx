@@ -87,6 +87,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [disableHover, setDisableHover] = useState(false);
+  const [textSelecting, setTextSelecting] = useState(false);
   const [isOverSidebar, setIsOverSidebar] = useState(false);
   
   const prevSizeRef = useRef<'S'|'M'|'L'>(note.sizeCategory as 'S'|'M'|'L');
@@ -183,6 +184,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       onPointerLeave={() => {
         setIsHovered(false);
+        setTextSelecting(false);
       }}
       whileHover={disableHover || isEditing || isDragging ? undefined : { scale: 1.1, zIndex: 10000, transition: { duration: 0.1, ease: 'easeInOut' } }}
       whileDrag={isOverSidebar
@@ -204,7 +206,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       animate={isHighlighted ? { scale: [0.8, 1] } : { scale: 1 }}
       transition={{ default: { duration: 0 }, scale: isHighlighted ? { duration: 0.15, repeat: 5, repeatType: 'reverse', ease: 'easeInOut' } : { duration: 0.1, ease: 'easeInOut' } }}
       onAnimationComplete={() => { if (isHighlighted) removeHighlightNote(note.id); }}
-      drag
+      drag={!textSelecting}
       dragRootElement={() => document.body}
       dragMomentum={false}
       onDragStart={(e: any, info: any) => {
@@ -268,12 +270,20 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           <div className="flex flex-col h-[360px] min-h-0">
             <div className="flex flex-col flex-1 p-1 overflow-hidden min-h-0">
               <input
+                onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
+                onPointerMove={(e) => e.stopPropagation()}
+                onPointerUp={(e) => e.stopPropagation()}
                 className="w-full bg-transparent border-b border-gray-400 focus:outline-none"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onFocus={() => initialEditing && title === note.title && setTitle('')}
               />
-              <div className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container">
+              <div
+                onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
+                onPointerMove={(e) => e.stopPropagation()}
+                onPointerUp={(e) => e.stopPropagation()}
+                className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container"
+              >
                 <ReactQuill
                   theme="snow"
                   value={content}
