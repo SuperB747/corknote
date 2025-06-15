@@ -202,14 +202,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
       }}
       animate={isHighlighted ? { scale: [0.8, 1] } : { scale: 1 }}
-      transition={{
-        default: { duration: 0 },
-        scale: isHighlighted
-          ? { duration: 0.15, repeat: 5, repeatType: 'reverse', ease: 'easeInOut' }
-          : isHovered
-            ? { duration: 0.1, ease: 'easeInOut' }
-            : { duration: 0.05, ease: 'easeInOut' }
-      }}
+      transition={{ default: { duration: 0 }, scale: isHighlighted ? { duration: 0.15, repeat: 5, repeatType: 'reverse', ease: 'easeInOut' } : { duration: 0.1, ease: 'easeInOut' } }}
       onAnimationComplete={() => { if (isHighlighted) removeHighlightNote(note.id); }}
       drag
       dragRootElement={() => document.body}
