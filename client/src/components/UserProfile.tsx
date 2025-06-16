@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { User, updateProfile, updateEmail, updatePassword, signOut } from 'firebase/auth';
 import { firebaseAuth } from '../firebase/config';
 import { Cog6ToothIcon, ArrowRightOnRectangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import ReactDOM from 'react-dom';
 
 interface UserProfileProps {
   user: User;
@@ -9,6 +10,8 @@ interface UserProfileProps {
 
 export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const [displayName, setDisplayName] = useState(user.displayName || '');
   const [email, setEmail] = useState(user.email || '');
   const [password, setPassword] = useState('');
@@ -48,15 +51,25 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
     }
   };
 
+  // toggle settings panel and compute position
+  const toggleSettings = () => {
+    if (!isSettingsOpen && settingsButtonRef.current) {
+      const rect = settingsButtonRef.current.getBoundingClientRect();
+      setPanelPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX });
+    }
+    setIsSettingsOpen(open => !open);
+  };
+
   return (
-    <div className="relative">
+    <>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-gray-700 flex-1">
           {user.displayName || user.email}
         </span>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+            ref={settingsButtonRef}
+            onClick={toggleSettings}
             className="p-1 hover:bg-gray-100 rounded-full"
             title="Settings"
           >
@@ -71,9 +84,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
           </button>
         </div>
       </div>
-
-      {isSettingsOpen && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-50 relative">
+      {/* Settings panel */}
+      {isSettingsOpen && panelPos && ReactDOM.createPortal(
+        <div
+          className="w-64 bg-white rounded-lg shadow-lg p-4 z-50"
+          style={{ position: 'fixed', top: panelPos.top, left: panelPos.left }}
+        >
           <h3 className="text-lg font-semibold mb-4">User Settings</h3>
           <button
             onClick={() => setIsSettingsOpen(false)}
@@ -124,8 +140,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
               Save
             </button>
           </div>
-        </div>
+        </div>, document.body
       )}
-    </div>
+    </>
   );
 }; 
