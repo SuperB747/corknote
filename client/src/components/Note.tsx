@@ -91,6 +91,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [isOverSidebar, setIsOverSidebar] = useState(false);
   
   const prevSizeRef = useRef<'S'|'M'|'L'>(note.sizeCategory as 'S'|'M'|'L');
+  const prevPosRef = useRef<{x:number,y:number}>(note.position);
   const [selectedSize, setSelectedSize] = useState<'S'|'M'|'L'>(note.sizeCategory as 'S'|'M'|'L');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [pinColor, setPinColor] = useState(pinColors[Math.floor(Math.random() * pinColors.length)]);
@@ -149,6 +150,12 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     }
   }, [note.content]);
 
+  useEffect(() => {
+    if (isEditing) {
+      prevPosRef.current = note.position;
+    }
+  }, [isEditing, note.position]);
+
   const handleSave = () => {
     updateNoteSize(note.id, selectedSize);
     updateNote(note.id, { title, content, color });
@@ -157,7 +164,24 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       updateNoteRotation(note.id, angle);
       onNewNoteHandled?.();
     }
+    updateNotePosition(note.id, prevPosRef.current);
     setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    if (initialEditing) {
+      // remove new note if cancelling creation
+      deleteNote(note.id);
+      onNewNoteHandled?.();
+      return;
+    }
+    // revert state and restore position
+    updateNotePosition(note.id, prevPosRef.current);
+    setIsEditing(false);
+    setSelectedSize(prevSizeRef.current);
+    setTitle(note.title);
+    setContent(note.content);
+    setColor(note.color);
   };
 
   const handleDelete = () => {
@@ -326,18 +350,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
             <div className="flex justify-end gap-2 py-1 px-4">
               <button
                 className="px-2 py-1 text-sm"
-                onClick={() => {
-                  if (initialEditing) {
-                    deleteNote(note.id);
-                    if (onNewNoteHandled) onNewNoteHandled();
-                  } else {
-                    setIsEditing(false);
-                    setSelectedSize(prevSizeRef.current);
-                    setTitle(note.title);
-                    setContent(note.content);
-                    setColor(note.color);
-                  }
-                }}
+                onClick={handleCancel}
               >
                 Cancel
               </button>
