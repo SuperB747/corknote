@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Note } from '../store/noteStore';
 import useNoteStore from '../store/noteStore';
@@ -97,6 +97,16 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [pinKey, setPinKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
+
+  // calculate checklist completion percentage
+  const checklistPercent = useMemo<number|null>(() => {
+    const div = document.createElement('div');
+    div.innerHTML = content;
+    const items = div.querySelectorAll('li.ql-checklist');
+    if (items.length === 0) return null;
+    const checked = div.querySelectorAll('li.ql-checklist.ql-checked').length;
+    return Math.round((checked / items.length) * 100);
+  }, [content]);
 
   useEffect(() => {
     if (isEditing) {
@@ -400,6 +410,12 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               Cancel
             </button>
           </div>
+        </div>
+      )}
+      {/* Checklist completion overlay */}
+      {!isEditing && checklistPercent !== null && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+          <span className="text-gray-800 text-4xl font-bold opacity-30">{checklistPercent}%</span>
         </div>
       )}
     </motion.div>

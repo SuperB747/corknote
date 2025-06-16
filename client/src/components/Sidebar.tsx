@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Modal from './Modal';
 // @ts-ignore
 import { motion, Reorder } from 'framer-motion';
 import useNoteStore from '../store/noteStore';
@@ -15,6 +16,7 @@ const Sidebar: React.FC = () => {
   const [folderName, setFolderName] = useState('');
   const [folderToDelete, setFolderToDelete] = useState<{id: string; name: string} | null>(null);
   const [cannotDeleteModal, setCannotDeleteModal] = useState<{name: string; count: number} | null>(null);
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   const handleCreateFolder = async () => {
     if (!currentUser || !folderName.trim()) return;
@@ -169,6 +171,31 @@ const Sidebar: React.FC = () => {
           </Reorder.Item>
         ))}
       </Reorder.Group>
+
+      {/* Footer card */}
+      <div className="mt-4 p-3 bg-amber-200 rounded-lg text-amber-800 text-xs border border-amber-300 shadow-md">
+        <div className="flex justify-between">
+          <button onClick={() => setIsContactOpen(true)} className="hover:underline">Contact Us</button>
+          <span>© {new Date().getFullYear()} CorkNote</span>
+        </div>
+      </div>
+
+      {/* Contact Modal */}
+      <Modal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} title="Contact Us">
+        <form className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Your Email</label>
+            <input type="email" className="mt-1 block w-full px-2 py-1 border rounded-md" placeholder="email@example.com" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Message</label>
+            <textarea className="mt-1 block w-full px-2 py-1 border rounded-md h-24" placeholder="Write your message..." />
+          </div>
+          <div className="text-right">
+            <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Send</button>
+          </div>
+        </form>
+      </Modal>
 
       {cannotDeleteModal && (
         <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
