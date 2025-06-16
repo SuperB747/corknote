@@ -45,18 +45,18 @@ const SIZE_OPTIONS = {
 const EDIT_MODE_WIDTH = 350; // px for width in editing mode
 const EDIT_MODE_HEIGHT = 360; // px for height in editing mode
 
-// quill toolbar config for advanced editing (bullets, lists, links)
+// quill toolbar config for advanced editing (bullets, lists, links, checklists)
 const quillModules = {
   toolbar: [
     ['bold','italic','underline','strike'],
-    [{ list: 'ordered' }, { list: 'bullet' }],
+    [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
     ['link'],
     ['clean']
   ],
 };
 const quillFormats = [
   'bold','italic','underline','strike',
-  'list','bullet',
+  'list','bullet','check',
   'link'
 ];
 
@@ -365,10 +365,13 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               }
             }}
           >
-            <div
-              className="quill-content-view"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
+            <div className="ql-snow p-0">
+              <div
+                className="ql-editor p-0"
+                style={{ margin: 0, padding: 0 }}
+                dangerouslySetInnerHTML={{ __html: content }}
+              />
+            </div>
           </div>
           {hasOverflow && (
             <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white/50 backdrop-blur-sm px-1 rounded">
