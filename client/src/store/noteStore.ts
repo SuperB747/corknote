@@ -147,17 +147,22 @@ const useNoteStore = create<NoteStore>((set, get) => {
     setSelectedFolder: (folderId: string) => set({ selectedFolderId: folderId }),
 
     updateFolderSettings: async (folderId: string, ocdEnabled: boolean) => {
+      // Optimistic UI update
+      set(state => ({
+        folders: state.folders.map(folder =>
+          folder.id === folderId ? { ...folder, ocdEnabled } : folder
+        ),
+      }));
       try {
-        set({ isLoading: true, error: null });
         await folderService.updateFolderSettings(folderId, { ocdEnabled });
+      } catch (error) {
+        // Revert on failure
         set(state => ({
           folders: state.folders.map(folder =>
-            folder.id === folderId ? { ...folder, ocdEnabled } : folder
+            folder.id === folderId ? { ...folder, ocdEnabled: !ocdEnabled } : folder
           ),
-          isLoading: false
+          error: 'Failed to update folder settings'
         }));
-      } catch (error) {
-        set({ error: 'Failed to update folder settings', isLoading: false });
       }
     },
 

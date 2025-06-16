@@ -54,12 +54,12 @@ const Login: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-lg max-w-4xl w-full relative z-10"
+        className="bg-white/80 backdrop-blur-lg border-2 border-yellow-200 p-8 rounded-2xl shadow-xl max-w-4xl w-full relative z-10"
       >
         <div className="flex flex-col lg:flex-row gap-8">
           {/* 로그인 폼 */}
           <div className="lg:w-1/2 w-full">
-            <h2 className="text-2xl font-bold text-center mb-6">Welcome to CorkNote</h2>
+            <h2 className="text-3xl font-bold text-center mb-6 whitespace-nowrap">✨ Welcome to CorkNote ✨</h2>
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 {error}
@@ -120,27 +120,39 @@ const Login: React.FC = () => {
               <p className="text-gray-600">
                 Don't have an account?{' '}
                 <Link to="/register" className="text-blue-500 hover:text-blue-600">
-                  Sign up
+                  Sign up for Free!
                 </Link>
               </p>
+            </div>
+            {/* How to use guide */}
+            <div className="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold mb-2">🗺️ How to use</h3>
+              <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                <li>🔑 Sign in with your email and password</li>
+                <li>➕ Click 'Add New Board' to create or select a board</li>
+                <li>📝 Add and style notes freely on your board</li>
+                <li>🔄 Drag & drop notes to organize your ideas</li>
+                <li>💾 Save your favorite layout for later</li>
+              </ul>
             </div>
           </div>
           {/* About and Sample Board */}
           <div className="lg:w-1/2 w-full flex flex-col space-y-4">
-            <h3 className="text-xl font-semibold">What is CorkNote?</h3>
+            <h3 className="text-xl font-semibold">🍃 What is CorkNote?</h3>
             <p className="text-gray-700 text-sm">
               CorkNote provides a corkboard-style interface for managing ideas intuitively, just like sticky notes.
             </p>
             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+              <li>⚡ Enhanced performance – lightning-fast loading!</li>
               <li>Completely free to use – no hidden costs!</li>
               <li>Arrange notes freely with drag and drop</li>
               <li>Organize notes by folder for quick navigation</li>
-              <li>Save your favorite layouts manually and load them anytime</li>
+              <li>💾 Save your favorite layouts and load anytime</li>
             </ul>
             <p className="text-gray-700 text-sm mt-4 italic">Unleash creativity. Visualize your ideas. Make them stick!</p>
             <p className="text-gray-700 text-sm italic">The perfect tool for thinkers, dreamers, and doers.</p>
             <h3 className="text-xl font-semibold mt-4 flex items-baseline">
-              Sample Board
+              🎨 Sample Board
               <span className="text-indigo-500 italic text-sm ml-2">Give it a try!</span>
             </h3>
             <div ref={sampleBoardRef} className="relative bg-cork bg-repeat w-full h-64 rounded-lg overflow-hidden shadow-inner">
