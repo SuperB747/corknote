@@ -72,7 +72,7 @@ interface NoteProps {
   initialEditing?: boolean;
   onNewNoteHandled?: () => void;
   onDragEnd?: (event: any, info: any) => void;
-  dragConstraints?: React.RefObject<HTMLDivElement | null> | { left: number; right: number; top: number; bottom: number };
+  dragConstraints?: React.RefObject<HTMLDivElement | null>;
 }
 
 const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled, dragConstraints }) => {

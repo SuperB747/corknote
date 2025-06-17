@@ -195,11 +195,45 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               initialEditing={note.id === newNoteId}
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
-              onDragEnd={(e, info) => {
-                updateNotePosition(note.id, {
-                  x: note.position.x + info.offset.x,
-                  y: note.position.y + info.offset.y,
-                });
+              onDragEnd={async (event, info) => {
+                // Clamp and update note position within board bounds
+                const rawX = note.position.x + info.offset.x;
+                const rawY = note.position.y + info.offset.y;
+                const clampedX = Math.max(0, Math.min(rawX, BOARD_WIDTH - NOTE_WIDTH));
+                const clampedY = Math.max(0, Math.min(rawY, BOARD_HEIGHT - NOTE_HEIGHT));
+                const newPosition = { x: clampedX, y: clampedY };
+                await (async () => newPosition)();
+                // Check for folder drop
+                let droppedOnFolder = false;
+                const sideEl = document.getElementById('sidebar');
+                if (info.point && sideEl) {
+                  const rect = sideEl.getBoundingClientRect();
+                  if (info.point.x >= rect.left && info.point.x <= rect.right && info.point.y >= rect.top && info.point.y <= rect.bottom) {
+                    const newFolderId = (document.elementFromPoint(info.point.x, info.point.y) as HTMLElement)
+                      .closest('[data-folder-id]')
+                      ?.getAttribute('data-folder-id');
+                    if (newFolderId && newFolderId !== selectedFolderId) {
+                      droppedOnFolder = true;
+                      const container = containerRef.current;
+                      const viewX = container?.scrollLeft || 0;
+                      const viewY = container?.scrollTop || 0;
+                      const cw = container?.clientWidth || 0;
+                      const ch = container?.clientHeight || 0;
+                      const xRandom = viewX + Math.random() * Math.max(0, cw - NOTE_WIDTH);
+                      const yRandom = viewY + Math.random() * Math.max(0, ch - NOTE_HEIGHT);
+                      await moveNoteToFolder(note.id, newFolderId, { x: xRandom, y: yRandom });
+                      setSelectedFolder(newFolderId);
+                      if (currentUser) {
+                        await loadNotes(currentUser.uid, newFolderId, true);
+                        updateNotePosition(note.id, { x: xRandom, y: yRandom });
+                        addHighlightNote(note.id);
+                      }
+                    }
+                  }
+                }
+                if (!droppedOnFolder) {
+                  updateNotePosition(note.id, newPosition);
+                }
               }}
               onNewNoteHandled={onNewNoteHandled}
             />
