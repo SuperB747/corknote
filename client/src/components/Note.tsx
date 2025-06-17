@@ -21,10 +21,10 @@ const pastelColors: string[] = [
   '#FDF2F8', // rose-100
 ];
 const deepColors: string[] = [
-  '#E76F51', // salmon
-  '#F4A261', // terracotta
-  '#FFB703', // sunflower yellow
-  '#F8E16C', // pale gold
+  '#D0F4DE', // Greenish
+  '#CAFFBF', // Yellowish
+  '#A0C4FF', // Neon Blue
+  '#BDB2FF', // Neon Purple
   '#A3D9C5', // aquamarine
   '#52B2CF', // sky teal
   '#8ECAE6', // light sky blue
