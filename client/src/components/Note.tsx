@@ -21,16 +21,16 @@ const pastelColors: string[] = [
   '#FDF2F8', // rose-100
 ];
 const deepColors: string[] = [
-  '#F9A8D4', // pink-300
-  '#FB923C', // orange-400
-  '#FCD34D', // yellow-300
-  '#60A5FA', // blue-400
-  '#34D399', // emerald-400
-  '#5EEAD4', // cyan-300
-  '#818CF8', // indigo-400
-  '#A78BFA', // purple-400
-  '#FF6B6B', // coral-400
-  '#FDBA74', // amber-300
+  '#E76F51', // salmon
+  '#F4A261', // terracotta
+  '#FFB703', // sunflower yellow
+  '#F8E16C', // pale gold
+  '#A3D9C5', // aquamarine
+  '#52B2CF', // sky teal
+  '#8ECAE6', // light sky blue
+  '#F7B2AD', // pink peach
+  '#B5838D', // mauve
+  '#CDB4DB', // lavender
 ];
 const allColors = [...pastelColors, ...deepColors];
 
