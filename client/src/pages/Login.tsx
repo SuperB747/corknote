@@ -18,6 +18,7 @@ const Login: React.FC = () => {
   const sampleBoardRef = useRef<HTMLDivElement>(null);
   // Random rotations for sample notes (±10deg)
   const sampleRotations = useRef<number[]>(Array.from({ length: 5 }, () => Math.random() * 20 - 10));
+  const sampleColors = ['#FDFFB6', '#CAFFBF', '#A0C4FF', '#9BF6FF', '#FFC6FF'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +55,7 @@ const Login: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-lg border-2 border-yellow-200 p-8 rounded-2xl shadow-xl max-w-4xl w-full relative z-10"
+        className="bg-white/80 backdrop-blur-lg pt-8 px-8 pb-4 rounded-2xl shadow-2xl max-w-4xl w-full relative z-10"
       >
         <div className="flex flex-col lg:flex-row gap-8">
           {/* 로그인 폼 */}
@@ -160,8 +161,8 @@ const Login: React.FC = () => {
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
-                style={{ rotate: sampleRotations.current[0] }}
-                className="absolute top-4 left-6 bg-note-yellow w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
+                style={{ rotate: sampleRotations.current[0], backgroundColor: sampleColors[0] }}
+                className="absolute top-4 left-6 w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Shopping List</strong>
                 <ul className="list-disc list-inside text-[9px] leading-none">
@@ -176,8 +177,8 @@ const Login: React.FC = () => {
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
-                style={{ rotate: sampleRotations.current[1] }}
-                className="absolute top-16 left-32 bg-note-pink w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
+                style={{ rotate: sampleRotations.current[1], backgroundColor: sampleColors[1] }}
+                className="absolute top-16 left-32 w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Project Ideas</strong>
                 <ul className="list-disc list-inside text-[9px] leading-none">
@@ -192,24 +193,24 @@ const Login: React.FC = () => {
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
-                style={{ rotate: sampleRotations.current[2] }}
-                className="absolute top-32 left-12 bg-note-blue w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
+                style={{ rotate: sampleRotations.current[2], backgroundColor: sampleColors[2] }}
+                className="absolute top-32 left-12 w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Tasks</strong>
-                <ul className="list-disc list-inside text-[9px] leading-none">
-                  <li>Call</li>
-                  <li>Email</li>
-                  <li>Plan</li>
-                  <li>Review</li>
-                  <li>Send</li>
+                <ul className="list-none text-[9px] leading-none space-y-1">
+                  <li><input type="checkbox" checked disabled className="mr-1 align-middle" />Call</li>
+                  <li><input type="checkbox" checked disabled className="mr-1 align-middle" />Email</li>
+                  <li><input type="checkbox" disabled className="mr-1 align-middle" />Plan</li>
+                  <li><input type="checkbox" disabled className="mr-1 align-middle" />Review</li>
+                  
                 </ul>
-              </motion.div>
+              </motion.div> 
               <motion.div
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
-                style={{ rotate: sampleRotations.current[3] }}
-                className="absolute top-8 left-48 bg-note-green w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
+                style={{ rotate: sampleRotations.current[3], backgroundColor: sampleColors[3] }}
+                className="absolute top-8 left-48 w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Notes Summary</strong>
                 <ul className="list-disc list-inside text-[9px] leading-none">
@@ -224,8 +225,8 @@ const Login: React.FC = () => {
                 drag
                 dragConstraints={sampleBoardRef}
                 dragMomentum={false}
-                style={{ rotate: sampleRotations.current[4] }}
-                className="absolute top-36 left-40 bg-purple-200 w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
+                style={{ rotate: sampleRotations.current[4], backgroundColor: sampleColors[4] }}
+                className="absolute top-36 left-40 w-24 h-24 rounded shadow-lg p-2 text-xs cursor-grab"
               >
                 <strong className="block mb-0 truncate whitespace-nowrap text-[10px]">Reminders</strong>
                 <ul className="list-disc list-inside text-[9px] leading-none">
@@ -250,7 +251,7 @@ const Login: React.FC = () => {
             <button type="button" onClick={() => setOpenModal('contact')} className="text-blue-500 hover:underline">Contact Us</button>
           </div>
         </div>
-        <hr className="my-6 border-gray-300" />
+        <hr className="my-2 border-gray-300" />
         <p className="text-xs text-gray-500 text-center">© 2025 corknote.com. All rights reserved.</p>
       </motion.div>
       {/* Modals */}
