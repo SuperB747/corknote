@@ -98,6 +98,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [pinKey, setPinKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
+  const [dynamicShadow, setDynamicShadow] = useState('');
 
   // calculate checklist completion percentage
   const checklistPercent = useMemo<number|null>(() => {
@@ -156,6 +157,14 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     }
   }, [isEditing, note.position]);
 
+  useEffect(() => {
+    const offset = 8 + Math.random() * 8; // vertical offset 8-16px
+    const blur = offset + Math.random() * offset; // blur radius
+    const spread = -offset * 0.5; // slight negative spread
+    const opacity = 0.3 + Math.random() * 0.4; // opacity 0.3-0.7
+    setDynamicShadow(`0 ${offset}px ${blur}px ${spread}px rgba(0,0,0,${opacity})`);
+  }, []);
+
   const handleSave = () => {
     updateNoteSize(note.id, selectedSize);
     updateNote(note.id, { title, content, color });
@@ -202,7 +211,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     <motion.div
       onTap={() => removeHighlightNote(note.id)}
       initial={false}
-      className={`note-draggable absolute rounded-2xl shadow-note overflow-hidden ${isHighlighted ? 'highlight-animate' : ''}`}
+      className={`note-draggable absolute rounded-none overflow-hidden ${isHighlighted ? 'highlight-animate' : ''}`}
       onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
       onPointerDown={() => {
         setDisableHover(true);
@@ -233,6 +242,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
+        boxShadow: dynamicShadow,
       }}
       animate={{
         x: note.position.x,
