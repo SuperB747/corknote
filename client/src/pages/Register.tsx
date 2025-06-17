@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { updateProfile } from 'firebase/auth';
 import { firebaseAuth } from '../firebase/config';
 import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 
 const Register: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
@@ -43,92 +44,98 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cork bg-repeat flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-cork-overlay"></div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-lg max-w-md w-full relative z-10"
-      >
-        <h2 className="text-2xl font-bold text-center mb-6">Create an Account</h2>
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+    <>
+      <Helmet>
+        <title>Register | CorkNote</title>
+        <meta name="description" content="Create a free CorkNote account to manage your ideas visually." />
+      </Helmet>
+      <div className="min-h-screen bg-cork bg-repeat flex items-center justify-center px-4">
+        <div className="absolute inset-0 bg-cork-overlay"></div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-lg max-w-md w-full relative z-10"
+        >
+          <h2 className="text-2xl font-bold text-center mb-6">Create an Account</h2>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="displayName">
+                Name
+              </label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="email">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="confirm-password">
+                Confirm Password
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors ${
+                loading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {loading ? 'Creating Account...' : 'Sign Up'}
+            </button>
+          </form>
+          <div className="mt-4 text-center">
+            <p className="text-gray-600">
+              Already have an account?{' '}
+              <Link to="/login" className="text-blue-500 hover:text-blue-600">
+                Sign in
+              </Link>
+            </p>
           </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="displayName">
-              Name
-            </label>
-            <input
-              id="displayName"
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="confirm-password">
-              Confirm Password
-            </label>
-            <input
-              id="confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors ${
-              loading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
-        </form>
-        <div className="mt-4 text-center">
-          <p className="text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="text-blue-500 hover:text-blue-600">
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+    </>
   );
 };
 
