@@ -72,9 +72,10 @@ interface NoteProps {
   initialEditing?: boolean;
   onNewNoteHandled?: () => void;
   onDragEnd?: (event: any, info: any) => void;
+  dragConstraints?: React.RefObject<HTMLDivElement | null> | { left: number; right: number; top: number; bottom: number };
 }
 
-const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled }) => {
+const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled, dragConstraints }) => {
   const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
   const setDragging = useNoteStore(state => state.setDragging);
   const highlightedNoteIds = useNoteStore(state => state.highlightedNoteIds);
@@ -253,7 +254,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       transition={{ default: { duration: 0 }, scale: isHighlighted ? { duration: 0.15, repeat: 5, repeatType: 'reverse', ease: 'easeInOut' } : { duration: 0.1, ease: 'easeInOut' } }}
       onAnimationComplete={() => { if (isHighlighted) removeHighlightNote(note.id); }}
       drag={!textSelecting}
-      dragRootElement={() => document.body}
+      dragConstraints={dragConstraints}
+      dragElastic={0}
       dragMomentum={false}
       onDragStart={(e: any, info: any) => {
         setIsDragging(true);

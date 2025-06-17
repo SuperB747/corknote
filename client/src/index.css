@@ -79,4 +79,13 @@ html, body, #root {
 
 .highlight-animate {
   animation: pulseBorder 5s ease-in-out;
+}
+
+/* Hide scrollbars for corkboard container */
+#corkboard-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+#corkboard-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 } 

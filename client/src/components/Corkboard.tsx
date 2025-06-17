@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ArrowsRightLeftIcon, ArrowDownTrayIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import useNoteStore from '../store/noteStore';
 import Note from './Note';
@@ -11,6 +11,10 @@ const MAX_ROTATION = 5;
 const NOTE_WIDTH = 200;
 const NOTE_HEIGHT = 200;
 
+// Board dimensions: adjust to control scrollable canvas size
+const BOARD_WIDTH = 2000; // px: horizontal scrollable width (adjust as needed)
+const BOARD_HEIGHT = 1500; // px: vertical scrollable height (adjust as needed)
+
 interface CorkboardProps {
   newNoteId?: string;
   onNewNoteHandled?: () => void;
@@ -19,6 +23,50 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation, moveNoteToFolder, setSelectedFolder, loadNotes, addHighlightNote, isDragging: noteIsDragging } = useNoteStore();
   const { currentUser } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  // Setup grab-to-pan behavior for corkboard
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    let isPanning = false;
+    let startX = 0, startY = 0, startScrollLeft = 0, startScrollTop = 0;
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      // don't pan when interacting with a note
+      const target = e.target as HTMLElement;
+      if (target.closest('.note-draggable')) return;
+      isPanning = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startScrollLeft = el.scrollLeft;
+      startScrollTop = el.scrollTop;
+      el.style.cursor = 'grabbing';
+      e.preventDefault();
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isPanning) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      el.scrollLeft = startScrollLeft - dx;
+      el.scrollTop = startScrollTop - dy;
+    };
+    const onMouseUp = () => {
+      if (!isPanning) return;
+      isPanning = false;
+      el.style.cursor = 'grab';
+    };
+    el.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    // initial cursor
+    el.style.cursor = 'grab';
+    return () => {
+      el.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
+
   // Layout save status
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -130,62 +178,33 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
       */}
       <div
         ref={containerRef}
-        className="absolute inset-0 overflow-visible overscroll-none w-full h-full"
+        id="corkboard-container"
+        className="absolute inset-0 overflow-auto overscroll-none w-full h-full scrollbar-container cursor-grab"
       >
-        {/* Corkboard background */}
-        <div className="absolute inset-0 bg-cork bg-repeat"></div>
-        <div className="absolute inset-0 bg-cork-overlay"></div>
-        
-        {/* Notes */}
-        {folderNotes.map((note) => (
-          <Note
-            key={note.id}
-            initialEditing={note.id === newNoteId}
-            note={note}
-            rotation={ocdEnabled ? 0 : note.rotation}
-            onDragEnd={async (event, info) => {
-              // Calculate new position based on offset
-              const newPosition = {
+        {/* Canvas area: adjustable via BOARD_WIDTH and BOARD_HEIGHT constants above */}
+        <div ref={canvasRef} className="relative overflow-hidden" style={{ width: BOARD_WIDTH, height: BOARD_HEIGHT }}>
+          {/* Corkboard background */}
+          <div className="absolute inset-0 bg-cork bg-repeat"></div>
+          <div className="absolute inset-0 bg-cork-overlay"></div>
+          
+          {/* Notes */}
+          {folderNotes.map((note) => (
+            <Note
+              key={note.id}
+              dragConstraints={canvasRef}
+              initialEditing={note.id === newNoteId}
+              note={note}
+              rotation={ocdEnabled ? 0 : note.rotation}
+              onDragEnd={(e, info) => {
+                updateNotePosition(note.id, {
                   x: note.position.x + info.offset.x,
                   y: note.position.y + info.offset.y,
-              };
-
-              // First, check for folder drop
-              let droppedOnFolder = false;
-              const sideEl = document.getElementById('sidebar');
-              if (info.point && sideEl) {
-                const rect = sideEl.getBoundingClientRect();
-                if (info.point.x >= rect.left && info.point.x <= rect.right && info.point.y >= rect.top && info.point.y <= rect.bottom) {
-                  const newFolderId = (document.elementFromPoint(info.point.x, info.point.y) as HTMLElement)?.closest('[data-folder-id]')?.getAttribute('data-folder-id');
-                  if (newFolderId && newFolderId !== selectedFolderId) {
-                    droppedOnFolder = true;
-                    const container = containerRef.current;
-                    const viewX = container?.scrollLeft || 0;
-                    const viewY = container?.scrollTop || 0;
-                    const cw = container?.clientWidth || 0;
-                    const ch = container?.clientHeight || 0;
-                    const xRandom = viewX + Math.random() * Math.max(0, cw - NOTE_WIDTH);
-                    const yRandom = viewY + Math.random() * Math.max(0, ch - NOTE_HEIGHT);
-                    await moveNoteToFolder(note.id, newFolderId, { x: xRandom, y: yRandom });
-                    setSelectedFolder(newFolderId);
-                    if (currentUser) {
-                      await loadNotes(currentUser.uid, newFolderId, true);
-                      // bump z-index of moved note relative to new folder's notes
-                      updateNotePosition(note.id, { x: xRandom, y: yRandom });
-                      addHighlightNote(note.id);
-                    }
-                  }
-                }
-              }
-
-              // If not dropped on a folder, update its position on the current board
-              if (!droppedOnFolder) {
-                updateNotePosition(note.id, newPosition);
-              }
-            }}
-            onNewNoteHandled={onNewNoteHandled}
-          />
-        ))}
+                });
+              }}
+              onNewNoteHandled={onNewNoteHandled}
+            />
+          ))}
+        </div>
       </div>
       {process.env.NODE_ENV === 'development' && <FirebaseUsageMonitor />}
     </div>
