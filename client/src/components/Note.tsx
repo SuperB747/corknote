@@ -72,6 +72,7 @@ interface NoteProps {
   initialEditing?: boolean;
   onNewNoteHandled?: () => void;
   onDragEnd?: (event: any, info: any) => void;
+  /** Optional ref to constrain drag (canvas container) */
   dragConstraints?: React.RefObject<HTMLDivElement | null>;
 }
 

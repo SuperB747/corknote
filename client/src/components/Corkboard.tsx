@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { ArrowsRightLeftIcon, ArrowDownTrayIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import useNoteStore from '../store/noteStore';
 import Note from './Note';
+import type { Note as NoteType } from '../store/noteStore';
 import FirebaseUsageMonitor from './FirebaseUsageMonitor';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -22,6 +23,9 @@ interface CorkboardProps {
 const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) => {
   const { notes, folders, selectedFolderId, updateNotePosition, saveNotePositions, updateFolderSettings, updateNoteRotation, moveNoteToFolder, setSelectedFolder, loadNotes, addHighlightNote, isDragging: noteIsDragging } = useNoteStore();
   const { currentUser } = useAuth();
+  // Transitional state when moving a note between folders
+  const [isMovingFolder, setIsMovingFolder] = useState(false);
+  const [transitionNotes, setTransitionNotes] = useState<NoteType[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   // Setup grab-to-pan behavior for corkboard
@@ -74,6 +78,8 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const [ocdOn, setOcdOn] = useState(false);
 
   const folderNotes = (notes ?? []).filter(note => note.folderId === selectedFolderId);
+  // Decide which notes to render: either in-transition old folder view or current folder view
+  const notesToRender = isMovingFolder && transitionNotes.length > 0 ? transitionNotes : folderNotes;
   const currentFolder = folders.find(f => f.id === selectedFolderId);
   const boardName = currentFolder ? `${currentFolder.name} Board` : 'Board';
   const ocdEnabled = currentFolder?.ocdEnabled ?? false;
@@ -188,7 +194,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
           <div className="absolute inset-0 bg-cork-overlay"></div>
           
           {/* Notes */}
-          {folderNotes.map((note) => (
+          {notesToRender.map((note) => (
             <Note
               key={note.id}
               dragConstraints={canvasRef}
@@ -214,6 +220,9 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
                       ?.getAttribute('data-folder-id');
                     if (newFolderId && newFolderId !== selectedFolderId) {
                       droppedOnFolder = true;
+                      // Prepare transition: keep other notes visible until new folder loads
+                      setTransitionNotes(folderNotes.filter(n => n.id !== note.id));
+                      setIsMovingFolder(true);
                       const container = containerRef.current;
                       const viewX = container?.scrollLeft || 0;
                       const viewY = container?.scrollTop || 0;
@@ -222,12 +231,14 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
                       const xRandom = viewX + Math.random() * Math.max(0, cw - NOTE_WIDTH);
                       const yRandom = viewY + Math.random() * Math.max(0, ch - NOTE_HEIGHT);
                       await moveNoteToFolder(note.id, newFolderId, { x: xRandom, y: yRandom });
-                      setSelectedFolder(newFolderId);
+                      // Load new folder notes, then update position and switch view
                       if (currentUser) {
                         await loadNotes(currentUser.uid, newFolderId, true);
-                        updateNotePosition(note.id, { x: xRandom, y: yRandom });
-                        addHighlightNote(note.id);
                       }
+                      updateNotePosition(note.id, { x: xRandom, y: yRandom });
+                      addHighlightNote(note.id);
+                      setSelectedFolder(newFolderId);
+                      setIsMovingFolder(false);
                     }
                   }
                 }
