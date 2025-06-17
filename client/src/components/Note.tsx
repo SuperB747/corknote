@@ -21,16 +21,16 @@ const pastelColors: string[] = [
   '#FDF2F8', // rose-100
 ];
 const deepColors: string[] = [
-  '#D0F4DE', // Greenish
+  '#FDFFB6', // Greenish
   '#CAFFBF', // Yellowish
   '#A0C4FF', // Neon Blue
-  '#BDB2FF', // Neon Purple
+  '#9BF6FF', // Neon Purple
   '#A3D9C5', // aquamarine
   '#52B2CF', // sky teal
   '#8ECAE6', // light sky blue
   '#F7B2AD', // pink peach
-  '#B5838D', // mauve
-  '#CDB4DB', // lavender
+  '#FFC6FF', // mauve
+  '#BDB2FF', // lavender
 ];
 const allColors = [...pastelColors, ...deepColors];
 
