@@ -228,16 +228,18 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           : { scale: 1.1, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
       style={{
         pointerEvents: isOverSidebar ? 'none' : 'auto',
-        x: note.position.x,
-        y: note.position.y,
-        rotate: rotation,
         transformOrigin: 'center center',
         zIndex: (isDragging || isHighlighted || isHovered) ? 9999 : note.zIndex,
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
       }}
-      animate={isHighlighted ? { scale: [0.8, 1] } : { scale: 1 }}
+      animate={{
+        x: note.position.x,
+        y: note.position.y,
+        rotate: rotation,
+        scale: isHighlighted ? [0.8, 1] : 1,
+      }}
       transition={{ default: { duration: 0 }, scale: isHighlighted ? { duration: 0.15, repeat: 5, repeatType: 'reverse', ease: 'easeInOut' } : { duration: 0.1, ease: 'easeInOut' } }}
       onAnimationComplete={() => { if (isHighlighted) removeHighlightNote(note.id); }}
       drag={!textSelecting}
@@ -261,8 +263,8 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
             info.point.y >= rect.top &&
             info.point.y <= rect.bottom;
           if (over !== isOverSidebar) {
-            setIsOverSidebar(over);
-          }
+          setIsOverSidebar(over);
+        }
         }
       }}
       onDragEnd={handleInternalDragEnd}
@@ -416,12 +418,12 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
             >
               Delete
             </button>
-            <button
-              onClick={() => setShowDeleteConfirm(false)}
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
               className="px-3 py-1 bg-gray-200 rounded-md"
-            >
-              Cancel
-            </button>
+              >
+                Cancel
+              </button>
           </div>
         </div>
       )}
@@ -435,4 +437,4 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   );
 };
 
-export default NoteComponent;
+export default NoteComponent; 

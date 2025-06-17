@@ -30,17 +30,39 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
   const boardName = currentFolder ? `${currentFolder.name} Board` : 'Board';
   const ocdEnabled = currentFolder?.ocdEnabled ?? false;
 
-  // Shuffle notes within current scroll viewport bounds
+  // Shuffle notes: randomize positions without overlap and keep within bounds
   const shuffleNotes = () => {
     const container = containerRef.current;
     if (!container) return;
     const cw = container.clientWidth;
     const ch = container.clientHeight;
-    const viewX = container.scrollLeft;
-    const viewY = container.scrollTop;
-    folderNotes.forEach(note => {
-      const x = viewX + Math.random() * Math.max(0, cw - NOTE_WIDTH);
-      const y = viewY + Math.random() * Math.max(0, ch - NOTE_HEIGHT);
+    const vx = container.scrollLeft;
+    const vy = container.scrollTop;
+    if (!selectedFolderId) return;
+    const notesToShuffle = notes.filter(n => n.folderId === selectedFolderId);
+    console.log('Shuffling notes:', notesToShuffle.map(n => n.id));
+    // track placed note rectangles
+    const placedRects: { x: number; y: number }[] = [];
+    notesToShuffle.forEach(note => {
+      let x: number, y: number;
+      const maxAttempts = 100;
+      let attempts = 0;
+      // find a non-overlapping position
+      do {
+        x = vx + Math.random() * Math.max(0, cw - NOTE_WIDTH);
+        y = vy + Math.random() * Math.max(0, ch - NOTE_HEIGHT);
+        attempts++;
+      } while (
+        attempts < maxAttempts &&
+        placedRects.some(r =>
+          x < r.x + NOTE_WIDTH &&
+          x + NOTE_WIDTH > r.x &&
+          y < r.y + NOTE_HEIGHT &&
+          y + NOTE_HEIGHT > r.y
+        )
+      );
+      // record the placed position
+      placedRects.push({ x, y });
       updateNotePosition(note.id, { x, y });
       const angle = (Math.random() * 2 - 1) * MAX_ROTATION;
       updateNoteRotation(note.id, angle);
