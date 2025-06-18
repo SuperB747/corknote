@@ -100,7 +100,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [pinKey, setPinKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
-  const [dynamicShadow, setDynamicShadow] = useState('');
+  const dynamicShadow = '0 4px 8px rgba(0,0,0,0.6)';
 
   // calculate checklist completion percentage
   const checklistPercent = useMemo<number|null>(() => {
@@ -158,14 +158,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       prevPosRef.current = note.position;
     }
   }, [isEditing, note.position]);
-
-  useEffect(() => {
-    const offset = 8 + Math.random() * 8; // vertical offset 8-16px
-    const blur = offset + Math.random() * offset; // blur radius
-    const spread = -offset * 0.5; // slight negative spread
-    const opacity = 0.3 + Math.random() * 0.4; // opacity 0.3-0.7
-    setDynamicShadow(`0 ${offset}px ${blur}px ${spread}px rgba(0,0,0,${opacity})`);
-  }, []);
 
   const handleSave = () => {
     updateNoteSize(note.id, selectedSize);
@@ -256,7 +248,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       transition={{ default: { duration: 0 }, scale: isHighlighted ? { duration: 0.15, repeat: 5, repeatType: 'reverse', ease: 'easeInOut' } : { duration: 0.1, ease: 'easeInOut' } }}
       onAnimationComplete={() => { if (isHighlighted) removeHighlightNote(note.id); }}
-      drag={!textSelecting}
+      drag={!isEditing && !textSelecting}
       dragConstraints={dragConstraints}
       dragElastic={0}
       dragMomentum={false}
@@ -388,10 +380,10 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
           <div className="mt-3 mb-1 flex justify-between items-start shrink-0">
             <h3 className="font-medium text-lg truncate">{note.title}</h3>
             <div className="flex gap-2">
-              <button onClick={() => setIsEditing(true)} className="p-1 hover:bg-black/10 rounded">
+              <button onPointerDown={(e) => e.stopPropagation()} onClick={() => setIsEditing(true)} className="p-1 hover:bg-black/10 rounded">
                 <PencilIcon className="w-4 h-4" />
               </button>
-              <button onClick={handleDelete} className="p-1 hover:bg-black/10 rounded">
+              <button onPointerDown={(e) => e.stopPropagation()} onClick={handleDelete} className="p-1 hover:bg-black/10 rounded">
                 <TrashIcon className="w-4 h-4" />
               </button>
             </div>
