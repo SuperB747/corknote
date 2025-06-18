@@ -177,6 +177,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     }
     updateNotePosition(note.id, prevPosRef.current);
     setIsEditing(false);
+    setTextSelecting(false);
   };
 
   const handleCancel = () => {
@@ -189,6 +190,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     // revert state and restore position
     updateNotePosition(note.id, prevPosRef.current);
     setIsEditing(false);
+    setTextSelecting(false);
     setSelectedSize(prevSizeRef.current);
     setTitle(note.title);
     setContent(note.content);
@@ -213,7 +215,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     <motion.div
       onTap={() => removeHighlightNote(note.id)}
       initial={false}
-      className={`note-draggable absolute rounded-none overflow-hidden ${isHighlighted ? 'highlight-animate' : ''}`}
+      className={`note-draggable absolute rounded-none overflow-hidden ${isHighlighted ? 'ring-4 ring-amber-500 ring-opacity-75 animate-ping' : ''}`}
       onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
       onPointerDown={() => {
         setDisableHover(true);
@@ -283,7 +285,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       onDragEnd={handleInternalDragEnd}
     >
       {isHighlighted && (
-        <div className="absolute inset-0 rounded-2xl pointer-events-none border-4 border-yellow-300 animate-ping" style={{ zIndex: 10000 }} />
+        <div className="absolute inset-0 rounded-2xl pointer-events-none ring-4 ring-amber-500 ring-opacity-75 animate-ping" style={{ zIndex: 10000 }} />
       )}
       {!isDragging && (
         <motion.div
