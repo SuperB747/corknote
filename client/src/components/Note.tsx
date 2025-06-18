@@ -74,9 +74,17 @@ interface NoteProps {
   onDragEnd?: (event: any, info: any) => void;
   /** Optional ref to constrain drag (canvas container) */
   dragConstraints?: React.RefObject<HTMLDivElement | null>;
+  highlightColor?: string;
+  highlightWidth?: number;
+  /** Opacity for the highlight border (0 to 1) */
+  highlightOpacity?: number;
 }
 
-const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled, dragConstraints }) => {
+function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled, dragConstraints,
+  highlightColor = '#8B0000',
+  highlightWidth = 4,
+  highlightOpacity = 1,
+}: NoteProps): React.ReactElement {
   const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
   const setDragging = useNoteStore(state => state.setDragging);
   const highlightedNoteIds = useNoteStore(state => state.highlightedNoteIds);
@@ -159,6 +167,24 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     }
   }, [isEditing, note.position]);
 
+  // Convert hex color to rgba string with given alpha
+  const hexToRgba = (hex: string, alpha: number) => {
+    let r = 0, g = 0, b = 0;
+    if (hex.startsWith('#')) {
+      const h = hex.slice(1);
+      if (h.length === 3) {
+        r = parseInt(h[0] + h[0], 16);
+        g = parseInt(h[1] + h[1], 16);
+        b = parseInt(h[2] + h[2], 16);
+      } else if (h.length === 6) {
+        r = parseInt(h.slice(0,2), 16);
+        g = parseInt(h.slice(2,4), 16);
+        b = parseInt(h.slice(4,6), 16);
+      }
+    }
+    return `rgba(${r},${g},${b},${alpha})`;
+  };
+
   const handleSave = () => {
     updateNoteSize(note.id, selectedSize);
     updateNote(note.id, { title, content, color });
@@ -207,7 +233,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     <motion.div
       onTap={() => removeHighlightNote(note.id)}
       initial={false}
-      className={`note-draggable absolute rounded-none overflow-hidden ${isHighlighted ? 'ring-4 ring-amber-500 ring-opacity-75 animate-ping' : ''}`}
+      className="note-draggable absolute rounded-none overflow-hidden"
       onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
       onPointerDown={() => {
         setDisableHover(true);
@@ -238,7 +264,9 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         backgroundColor: color,
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
-        boxShadow: dynamicShadow,
+        boxShadow: isHighlighted
+          ? `${dynamicShadow}, inset 0 0 0 ${highlightWidth}px ${hexToRgba(highlightColor, highlightOpacity)}`
+          : dynamicShadow,
       }}
       animate={{
         x: note.position.x,
@@ -247,7 +275,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         scale: isHighlighted ? [0.8, 1] : 1,
       }}
       transition={{ default: { duration: 0 }, scale: isHighlighted ? { duration: 0.15, repeat: 5, repeatType: 'reverse', ease: 'easeInOut' } : { duration: 0.1, ease: 'easeInOut' } }}
-      onAnimationComplete={() => { if (isHighlighted) removeHighlightNote(note.id); }}
       drag={!isEditing && !textSelecting}
       dragConstraints={dragConstraints}
       dragElastic={0}
@@ -276,9 +303,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       }}
       onDragEnd={handleInternalDragEnd}
     >
-      {isHighlighted && (
-        <div className="absolute inset-0 rounded-2xl pointer-events-none ring-4 ring-amber-500 ring-opacity-75 animate-ping" style={{ zIndex: 10000 }} />
-      )}
       {!isDragging && (
         <motion.div
           key={pinKey}
@@ -442,6 +466,6 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
       )}
     </motion.div>
   );
-};
+}
 
 export default NoteComponent; 

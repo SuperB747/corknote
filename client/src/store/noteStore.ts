@@ -87,7 +87,7 @@ const useNoteStore = create<NoteStore>((set, get) => {
     highlightedNoteIds: [],
     addHighlightNote: (noteId: string) => {
       set(state => ({ highlightedNoteIds: [...state.highlightedNoteIds, noteId] }));
-      setTimeout(() => { get().removeHighlightNote(noteId); }, 10000);
+      setTimeout(() => { get().removeHighlightNote(noteId); }, 5000);
     },
     removeHighlightNote: (noteId: string) => set(state => ({ highlightedNoteIds: state.highlightedNoteIds.filter(id => id !== noteId) })),
 

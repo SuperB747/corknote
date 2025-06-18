@@ -10,7 +10,7 @@ import { getNotes } from '../services/noteService';
 
 const Sidebar: React.FC = () => {
   const { currentUser } = useAuth();
-  const { folders, selectedFolderId, setSelectedFolder, createFolder, updateFolder, deleteFolder, reorderFolders, isDragging } = useNoteStore();
+  const { folders, selectedFolderId, setSelectedFolder, saveNotePositions, unsavedChanges, createFolder, updateFolder, deleteFolder, reorderFolders, isDragging } = useNoteStore();
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
@@ -61,6 +61,14 @@ const Sidebar: React.FC = () => {
   const startEditing = (folder: { id: string; name: string }) => {
     setIsEditingFolder(folder.id);
     setFolderName(folder.name);
+  };
+
+  // Handler to auto-save layout changes before selecting a new folder
+  const handleSelectFolder = async (folderId: string) => {
+    if (unsavedChanges) {
+      await saveNotePositions();
+    }
+    setSelectedFolder(folderId);
   };
 
   return (
@@ -125,7 +133,7 @@ const Sidebar: React.FC = () => {
             key={folder.id}
             data-folder-id={folder.id}
             value={folder}
-            onClick={() => setSelectedFolder(folder.id)}
+            onClick={() => handleSelectFolder(folder.id)}
             dragListener={!isDragging}
             className={`flex items-center justify-between rounded-lg p-2 text-sm cursor-pointer border ${
               selectedFolderId === folder.id
@@ -146,7 +154,7 @@ const Sidebar: React.FC = () => {
             ) : (
               <>
                 <button
-                  onClick={() => setSelectedFolder(folder.id)}
+                  onClick={() => handleSelectFolder(folder.id)}
                   className="flex items-center justify-start flex-1 pl-2 text-gray-700 min-w-0"
                 >
                   <FolderIcon className="w-5 h-5 mr-2 flex-shrink-0" />
