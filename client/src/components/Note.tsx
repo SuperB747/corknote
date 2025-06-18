@@ -316,7 +316,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
                 onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
                 onPointerMove={(e) => e.stopPropagation()}
                 onPointerUp={(e) => e.stopPropagation()}
-                className="w-full bg-transparent border-b border-gray-400 focus:outline-none"
+                className="w-full bg-transparent border-b border-gray-400 focus:outline-none cursor-text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onFocus={() => initialEditing && title === note.title && setTitle('')}
@@ -325,7 +325,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
                 onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
                 onPointerMove={(e) => e.stopPropagation()}
                 onPointerUp={(e) => e.stopPropagation()}
-                className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container"
+                className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container cursor-text"
               >
                 <ReactQuill
                   theme="snow"
