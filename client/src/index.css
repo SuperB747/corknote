@@ -88,4 +88,19 @@ html, body, #root {
 }
 #corkboard-container::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
+}
+
+/* View-mode Quill override: dynamic height to fill note content area */
+.view-mode-quill .ql-container.ql-snow {
+  height: 100% !important;
+  overflow-y: auto !important;
+  border: none !important;
+}
+.view-mode-quill .ql-editor {
+  height: auto !important;
+}
+
+/* editing-mode: text cursor for Quill editor */
+.editing-mode .ql-editor {
+  cursor: text !important;
 } 

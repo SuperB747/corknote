@@ -100,6 +100,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
   const [pinKey, setPinKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
+  const contentDirtyRef = useRef(false);
   const dynamicShadow = '0 4px 8px rgba(0,0,0,0.6)';
 
   // calculate checklist completion percentage
@@ -207,9 +208,10 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
     <motion.div
       onTap={() => removeHighlightNote(note.id)}
       initial={false}
-      className={`note-draggable absolute rounded-none overflow-hidden ${isHighlighted ? 'ring-4 ring-amber-500 ring-opacity-75 animate-ping' : ''}`}
+      className={`note-draggable ${isEditing ? 'editing-mode' : ''} absolute rounded-none overflow-hidden ${isHighlighted ? 'ring-4 ring-amber-500 ring-opacity-75 animate-ping' : ''}`}
       onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
-      onPointerDown={() => {
+      onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => {
+        if ((e.target as HTMLElement).closest('li.ql-checklist')) return;
         setDisableHover(true);
         setIsHovered(false);
       }}
@@ -221,9 +223,13 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
         if (isEditing || disableHover || isDragging) return;
         setIsHovered(true);
       }}
-      onPointerLeave={() => {
+      onPointerLeave={(e: React.PointerEvent<HTMLDivElement>) => {
         setIsHovered(false);
         setTextSelecting(false);
+        if (!isEditing && contentDirtyRef.current) {
+          updateNote(note.id, { content });
+          contentDirtyRef.current = false;
+        }
       }}
       whileHover={disableHover || isEditing || isDragging ? undefined : { scale: 1.1, zIndex: 10000, transition: { duration: 0.1, ease: 'easeInOut' } }}
       whileDrag={isOverSidebar
@@ -330,7 +336,7 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
                 <ReactQuill
                   theme="snow"
                   value={content}
-                  onChange={setContent}
+                  onChange={(newContent: string) => { setContent(newContent); contentDirtyRef.current = true; }}
                   modules={quillModules}
                   formats={quillFormats}
                 />
@@ -388,28 +394,16 @@ const NoteComponent: React.FC<NoteProps> = ({ note, rotation = 0, initialEditing
               </button>
             </div>
           </div>
-          <div
-            ref={contentRef}
-            className={`mt-0 flex-1 relative text-sm scrollbar-container ${hasOverflow ? 'overflow-y-auto overscroll-none' : 'overflow-hidden'}`}
-            onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => {
-              if (hasOverflow && e.deltaY !== 0) {
-                e.stopPropagation();
-              }
-            }}
-          >
-            <div className="ql-snow p-0">
-              <div
-                className="ql-editor p-0"
-                style={{ margin: 0, padding: 0 }}
-                dangerouslySetInnerHTML={{ __html: content }}
-              />
-            </div>
+          <div className="mt-0 flex-1 relative text-sm scrollbar-container overflow-y-auto overscroll-none" onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { if (e.deltaY !== 0) e.stopPropagation(); }}>
+            <ReactQuill
+              theme="snow"
+              value={content}
+              onChange={(newContent: string) => { setContent(newContent); contentDirtyRef.current = true; }}
+              modules={{ toolbar: false }}
+              formats={quillFormats}
+              className="view-mode-quill h-full"
+            />
           </div>
-          {hasOverflow && (
-            <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white/50 backdrop-blur-sm px-1 rounded">
-              scroll
-            </div>
-          )}
         </div>
       )}
       {showDeleteConfirm && (
