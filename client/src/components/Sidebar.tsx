@@ -155,7 +155,7 @@ const Sidebar: React.FC = () => {
             ) : (
               <>
                 <button
-                  onClick={() => handleSelectFolder(folder.id)}
+                  onClick={(e) => { e.stopPropagation(); handleSelectFolder(folder.id); }}
                   className="flex items-center justify-start flex-1 pl-2 text-gray-700 min-w-0"
                 >
                   <FolderIcon className="w-5 h-5 mr-2 flex-shrink-0" />

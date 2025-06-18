@@ -237,11 +237,10 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
                       const xRandom = viewX + Math.random() * Math.max(0, cw - NOTE_WIDTH);
                       const yRandom = viewY + Math.random() * Math.max(0, ch - NOTE_HEIGHT);
                       await moveNoteToFolder(note.id, newFolderId, { x: xRandom, y: yRandom });
-                      // Load new folder notes, then update position and switch view
+                      // Load new folder notes and switch view (position comes from Firestore)
                       if (currentUser) {
                         await loadNotes(currentUser.uid, newFolderId, true);
                       }
-                      updateNotePosition(note.id, { x: xRandom, y: yRandom });
                       addHighlightNote(note.id);
                       setSelectedFolder(newFolderId);
                       setIsMovingFolder(false);
