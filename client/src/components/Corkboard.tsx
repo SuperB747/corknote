@@ -138,6 +138,12 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     }
   };
 
+  // Expose saveLayout globally for external triggers (e.g., sidebar)
+  useEffect(() => {
+    (window as any).saveLayout = saveLayout;
+    return () => { delete (window as any).saveLayout; };
+  }, [saveLayout, newNoteId, onNewNoteHandled]);
+
   // Update note position on drag end
   const handleDragEnd = (noteId: string, position: { x: number; y: number }) => {
     updateNotePosition(noteId, position);

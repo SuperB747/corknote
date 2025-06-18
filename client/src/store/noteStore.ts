@@ -313,11 +313,14 @@ const useNoteStore = create<NoteStore>((set, get) => {
         }
         // Clear cache for new folder so full data will be fetched from Firestore on next load
         delete notesCache[newFolderId];
-        // Refresh current (old) folder notes
+        // After moving to new folder, remove this note from change tracking and update unsavedChanges
+        changedNoteIds.delete(noteId);
+        const remainingUnsaved = changedNoteIds.size > 0;
+        // Refresh current (old) folder notes and update unsavedChanges flag
         if (oldFolderId) {
-          set({ notes: notesCache[oldFolderId], isLoading: false });
+          set({ notes: notesCache[oldFolderId], unsavedChanges: remainingUnsaved, isLoading: false });
         } else {
-          set({ isLoading: false });
+          set({ unsavedChanges: remainingUnsaved, isLoading: false });
         }
       } catch (error) {
         set({ error: 'Failed to move note', isLoading: false });
