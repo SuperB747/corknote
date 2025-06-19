@@ -242,8 +242,6 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
   // Manual drag state
   const dragState = useRef({ dragging: false, startX: 0, startY: 0, origX: 0, origY: 0, overSidebar: false });
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // disable dragging in editing mode
-    if (isEditing) return;
     e.preventDefault();
     dragState.current = { dragging: true, startX: e.clientX, startY: e.clientY, origX: note.position.x, origY: note.position.y, overSidebar: false };
     setIsDragging(true);
@@ -345,89 +343,96 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
       )}
       {isEditing ? (
         <>
-        {/* Editing UI: dragging disabled in this mode */}
-          <div className="absolute top-2 right-2 flex items-center gap-2 bg-transparent p-1 rounded">
-            {(['S','M','L'] as const).map(key => (
-              <label key={key} className="inline-flex items-center gap-1 text-sm cursor-pointer">
-                <input
-                  type="radio"
-                  name="size"
-                  value={key}
-                  checked={selectedSize===key}
-                  onChange={() => setSelectedSize(key)}
-                  className="sr-only"
-                />
-                <div className={`w-4 h-4 border-2 rounded-full flex items-center justify-center ${selectedSize===key ? 'border-black' : 'border-gray-300'}`}>
-                  {selectedSize===key && <div className="w-2 h-2 bg-black rounded-full" />}
-                </div>
-                <span className="text-xs">{key}</span>
-              </label>
+        {/* Editing UI: drag handle at bottom-left */}
+        <div
+          className="absolute bottom-2 left-2 cursor-grab select-none text-xl"
+          onPointerDown={handlePointerDown}
+          onMouseDown={(e) => { e.preventDefault(); handlePointerDown(e as any); }}
+        >
+          ☰
+        </div>
+        <div className="absolute top-2 right-2 flex items-center gap-2 bg-transparent p-1 rounded">
+          {(['S','M','L'] as const).map(key => (
+            <label key={key} className="inline-flex items-center gap-1 text-sm cursor-pointer">
+              <input
+                type="radio"
+                name="size"
+                value={key}
+                checked={selectedSize===key}
+                onChange={() => setSelectedSize(key)}
+                className="sr-only"
+              />
+              <div className={`w-4 h-4 border-2 rounded-full flex items-center justify-center ${selectedSize===key ? 'border-black' : 'border-gray-300'}`}>
+                {selectedSize===key && <div className="w-2 h-2 bg-black rounded-full" />}
+              </div>
+              <span className="text-xs">{key}</span>
+            </label>
+          ))}
+        </div>
+        <div className="flex flex-col h-[360px] min-h-0">
+          <div className="flex flex-col flex-1 p-1 overflow-hidden min-h-0">
+            <input
+              onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
+              onPointerMove={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+            className="w-full bg-transparent border-b border-gray-400 focus:outline-none cursor-text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onFocus={() => initialEditing && title === note.title && setTitle('')}
+            />
+            <div
+              onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
+              onPointerMove={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+            className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container cursor-text"
+            >
+              <ReactQuill
+                theme="snow"
+                value={content}
+                onChange={setContent}
+                modules={quillModules}
+                formats={quillFormats}
+              />
+            </div>
+          </div>
+          <div className="flex justify-center flex-wrap gap-1 py-1 select-none" onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => { e.stopPropagation(); e.preventDefault(); }} onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => { e.stopPropagation(); e.preventDefault(); }}>
+            {pastelColors.map((hex, idx) => (
+              <button
+                key={`pastel-${idx}`}
+                className={`w-6 h-6 rounded-full border ${color === hex ? 'border-black' : 'border-gray-300'}`}
+                style={{ backgroundColor: hex }}
+                onClick={() => setColor(hex)}
+              />
             ))}
           </div>
-          <div className="flex flex-col h-[360px] min-h-0">
-            <div className="flex flex-col flex-1 p-1 overflow-hidden min-h-0">
-              <input
-                onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
-                onPointerMove={(e) => e.stopPropagation()}
-                onPointerUp={(e) => e.stopPropagation()}
-              className="w-full bg-transparent border-b border-gray-400 focus:outline-none cursor-text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onFocus={() => initialEditing && title === note.title && setTitle('')}
+          <div className="flex justify-center flex-wrap gap-1 pb-1 select-none" onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => { e.stopPropagation(); e.preventDefault(); }} onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => { e.stopPropagation(); e.preventDefault(); }}>
+            {deepColors.map((hex, idx) => (
+              <button
+                key={`deep-${idx}`}
+                className={`w-6 h-6 rounded-full border ${color === hex ? 'border-black' : 'border-gray-300'}`}
+                style={{ backgroundColor: hex }}
+                onClick={() => setColor(hex)}
               />
-              <div
-                onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
-                onPointerMove={(e) => e.stopPropagation()}
-                onPointerUp={(e) => e.stopPropagation()}
-              className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container cursor-text"
-              >
-                <ReactQuill
-                  theme="snow"
-                  value={content}
-                  onChange={setContent}
-                  modules={quillModules}
-                  formats={quillFormats}
-                />
-              </div>
-            </div>
-            <div className="flex justify-center flex-wrap gap-1 py-1">
-              {pastelColors.map((hex, idx) => (
-                <button
-                  key={`pastel-${idx}`}
-                  className={`w-6 h-6 rounded-full border ${color === hex ? 'border-black' : 'border-gray-300'}`}
-                  style={{ backgroundColor: hex }}
-                  onClick={() => setColor(hex)}
-                />
-              ))}
-            </div>
-            <div className="flex justify-center flex-wrap gap-1 pb-1">
-              {deepColors.map((hex, idx) => (
-                <button
-                  key={`deep-${idx}`}
-                  className={`w-6 h-6 rounded-full border ${color === hex ? 'border-black' : 'border-gray-300'}`}
-                  style={{ backgroundColor: hex }}
-                  onClick={() => setColor(hex)}
-                />
-              ))}
-            </div>
-            <div className="flex justify-end gap-2 py-1 px-4">
-              <button
-                className="px-2 py-1 text-sm"
-              onPointerDown={(e) => e.stopPropagation()} onClick={handleCancel}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-2 py-1 text-sm text-blue-600"
-              onPointerDown={(e) => e.stopPropagation()} onClick={() => {
-                  prevSizeRef.current = selectedSize;
-                  handleSave();
-                }}
-              >
-                Save
-              </button>
-            </div>
+            ))}
           </div>
+          <div className="flex justify-end gap-2 py-1 px-4">
+            <button
+              className="px-2 py-1 text-sm"
+            onPointerDown={(e) => e.stopPropagation()} onClick={handleCancel}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-2 py-1 text-sm text-blue-600"
+            onPointerDown={(e) => e.stopPropagation()} onClick={() => {
+                prevSizeRef.current = selectedSize;
+                handleSave();
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
         </>
       ) : (
         <div className="p-2 flex flex-col h-full relative">
