@@ -206,6 +206,7 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
         <div
           ref={canvasRef}
           className="relative overflow-hidden w-full h-full min-w-[2304px] min-h-[1440px]"
+          style={{ transform: 'translateZ(0)', willChange: 'transform' }}
         >
           {/* Corkboard background */}
           <div className="absolute inset-0 bg-cork bg-repeat"></div>
