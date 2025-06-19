@@ -99,6 +99,7 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
   const [isDragging, setIsDragging] = useState(false);
   const [textSelecting, setTextSelecting] = useState(false);
   const [isOverSidebar, setIsOverSidebar] = useState(false);
+  const [editOffset, setEditOffset] = useState<{x: number; y: number}>({ x: 0, y: 0 });
   
   const prevSizeRef = useRef<'S'|'M'|'L'>(note.sizeCategory as 'S'|'M'|'L');
   const prevPosRef = useRef<{x:number,y:number}>(note.position);
@@ -158,6 +159,25 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
       prevPosRef.current = note.position;
     }
   }, [isEditing, note.position]);
+
+  // Adjust note position in edit mode to keep expanded panel within board bounds
+  useEffect(() => {
+    if (isEditing && dragConstraints?.current) {
+      const boardEl = dragConstraints.current;
+      const boardWidth = boardEl.clientWidth;
+      const boardHeight = boardEl.clientHeight;
+      const expandedWidth = EDIT_MODE_WIDTH;
+      const expandedHeight = EDIT_MODE_HEIGHT;
+      const x = note.position.x;
+      const y = note.position.y;
+      let offsetX = 0, offsetY = 0;
+      if (x + expandedWidth > boardWidth) offsetX = boardWidth - (x + expandedWidth);
+      if (y + expandedHeight > boardHeight) offsetY = boardHeight - (y + expandedHeight);
+      setEditOffset({ x: offsetX, y: offsetY });
+    } else {
+      setEditOffset({ x: 0, y: 0 });
+    }
+  }, [isEditing, note.position.x, note.position.y, dragConstraints]);
 
   // Convert hex color to rgba string with given alpha
   const hexToRgba = (hex: string, alpha: number) => {
@@ -222,6 +242,7 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
   // Manual drag state
   const dragState = useRef({ dragging: false, startX: 0, startY: 0, origX: 0, origY: 0, overSidebar: false });
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // disable dragging in editing mode
     if (isEditing) return;
     e.preventDefault();
     dragState.current = { dragging: true, startX: e.clientX, startY: e.clientY, origX: note.position.x, origY: note.position.y, overSidebar: false };
@@ -289,11 +310,12 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
     <div
       className="note-draggable absolute"
       onClick={() => removeHighlightNote(note.id)}
-      onPointerDown={handlePointerDown}
+      onPointerDown={(e) => { if (!isEditing) handlePointerDown(e); }}
+      onMouseDown={(e) => { if (!isEditing) { e.preventDefault(); handlePointerDown(e as any); } }}
       onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => e.stopPropagation()}
       style={{
-        top: note.position.y,
-        left: note.position.x,
+        top: note.position.y + editOffset.y,
+        left: note.position.x + editOffset.x,
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
         backgroundColor: color,
@@ -305,7 +327,7 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
         transformOrigin: 'center center',
         zIndex: (isDragging || isHighlighted) ? 9999 : note.zIndex,
         opacity: isOverSidebar ? 0.5 : 1,
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: isEditing ? 'auto' : (isDragging ? 'grabbing' : 'grab'),
       }}
     >
       {/* Pin drop animation: isolate pin to avoid blurring note text */}
@@ -323,6 +345,7 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
       )}
       {isEditing ? (
         <>
+        {/* Editing UI: dragging disabled in this mode */}
           <div className="absolute top-2 right-2 flex items-center gap-2 bg-transparent p-1 rounded">
             {(['S','M','L'] as const).map(key => (
               <label key={key} className="inline-flex items-center gap-1 text-sm cursor-pointer">
@@ -347,7 +370,7 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
                 onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
                 onPointerMove={(e) => e.stopPropagation()}
                 onPointerUp={(e) => e.stopPropagation()}
-                className="w-full bg-transparent border-b border-gray-400 focus:outline-none cursor-text"
+              className="w-full bg-transparent border-b border-gray-400 focus:outline-none cursor-text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onFocus={() => initialEditing && title === note.title && setTitle('')}
@@ -356,7 +379,7 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
                 onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
                 onPointerMove={(e) => e.stopPropagation()}
                 onPointerUp={(e) => e.stopPropagation()}
-                className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container cursor-text"
+              className="mt-2 h-[400px] overflow-auto overscroll-none scrollbar-container cursor-text"
               >
                 <ReactQuill
                   theme="snow"
@@ -390,13 +413,13 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
             <div className="flex justify-end gap-2 py-1 px-4">
               <button
                 className="px-2 py-1 text-sm"
-                onClick={handleCancel}
+              onPointerDown={(e) => e.stopPropagation()} onClick={handleCancel}
               >
                 Cancel
               </button>
               <button
                 className="px-2 py-1 text-sm text-blue-600"
-                onClick={() => {
+              onPointerDown={(e) => e.stopPropagation()} onClick={() => {
                   prevSizeRef.current = selectedSize;
                   handleSave();
                 }}
