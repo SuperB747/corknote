@@ -317,11 +317,12 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
         backgroundColor: color,
-        boxShadow: isHighlighted
+        // Only show highlight border when highlighted and not in new-note edit mode
+        boxShadow: (isHighlighted && !initialEditing)
           ? `${dynamicShadow}, inset 0 0 0 ${highlightWidth}px ${hexToRgba(highlightColor, highlightOpacity)}`
           : dynamicShadow,
         // Rotate and scale; apply GPU layer hints only while dragging
-        transform: `rotate(${rotation}deg) scale(${isHighlighted ? 1.1 : 1})`,
+        transform: `rotate(${rotation}deg)`,
         transformOrigin: 'center center',
         zIndex: (isDragging || isHighlighted) ? 9999 : note.zIndex,
         opacity: isOverSidebar ? 0.5 : 1,
@@ -351,7 +352,11 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
         >
           ☰
         </div>
-        <div className="absolute top-2 right-2 flex items-center gap-2 bg-transparent p-1 rounded">
+        <div
+          className="absolute top-2 right-2 flex items-center gap-2 bg-transparent p-1 rounded"
+          onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => { e.stopPropagation(); e.preventDefault(); }}
+          onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => { e.stopPropagation(); e.preventDefault(); }}
+        >
           {(['S','M','L'] as const).map(key => (
             <label key={key} className="inline-flex items-center gap-1 text-sm cursor-pointer">
               <input
@@ -369,7 +374,24 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
             </label>
           ))}
         </div>
-        <div className="flex flex-col h-[360px] min-h-0">
+        <div
+          className="flex flex-col h-[360px] min-h-0"
+          onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => {
+            const target = e.target as HTMLElement;
+            // allow selection inside title input or quill editor
+            if (!target.closest('input') && !target.closest('.ql-editor')) {
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          }}
+          onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('input') && !target.closest('.ql-editor')) {
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          }}
+        >
           <div className="flex flex-col flex-1 p-1 overflow-hidden min-h-0">
             <input
               onPointerDown={(e) => { e.stopPropagation(); setTextSelecting(true); }}
