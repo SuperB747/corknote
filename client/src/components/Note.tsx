@@ -308,10 +308,12 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
     >
+      {/* Pin drop animation: isolate pin to avoid blurring note text */}
       {!isDragging && (
         <motion.div
           key={pinKey}
           className="absolute top-0 left-1/2 -translate-x-1/2"
+          style={{ transform: 'translateZ(0)', willChange: 'transform', backfaceVisibility: 'hidden' }}
           initial={{ y: -30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1, type: 'spring', stiffness: 400, damping: 20 }}
