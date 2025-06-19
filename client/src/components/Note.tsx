@@ -74,13 +74,15 @@ interface NoteProps {
   onDragEnd?: (event: any, info: any) => void;
   /** Optional ref to constrain drag (canvas container) */
   dragConstraints?: React.RefObject<HTMLDivElement | null>;
+  /** Callback when dropping over sidebar to move folder */
+  onFolderDrop?: (noteId: string, clientX: number, clientY: number) => void;
   highlightColor?: string;
   highlightWidth?: number;
   /** Opacity for the highlight border (0 to 1) */
   highlightOpacity?: number;
 }
 
-function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled, dragConstraints,
+function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled, dragConstraints, onFolderDrop,
   highlightColor = '#8B0000',
   highlightWidth = 4,
   highlightOpacity = 1,
@@ -219,12 +221,10 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
   };
 
   const handleInternalDragEnd = () => {
-    // Called after manual drag completes
     setIsDragging(false);
     setDragging(false);
     setDisableHover(true);
     setIsOverSidebar(false);
-    // Keep pin handling unchanged
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
     setPinKey((k: number) => k + 1);
   };
@@ -244,24 +244,52 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
     if (!dragState.current.dragging) return;
     const dx = e.clientX - dragState.current.startX;
     const dy = e.clientY - dragState.current.startY;
-    updateNotePosition(note.id, { x: dragState.current.origX + dx, y: dragState.current.origY + dy });
+    const rawX = dragState.current.origX + dx;
+    const rawY = dragState.current.origY + dy;
+    // Clamp within board bounds
+    const clampedX = Math.max(0, Math.min(rawX, dragConstraints?.current?.clientWidth ?? rawX));
+    const clampedY = Math.max(0, Math.min(rawY, dragConstraints?.current?.clientHeight ?? rawY));
+    // Detect over sidebar
+    const sideEl = document.getElementById('sidebar');
+    let overSidebar = false;
+    if (sideEl) {
+      const rect = sideEl.getBoundingClientRect();
+      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        overSidebar = true;
+      }
+    }
+    setIsOverSidebar(overSidebar);
+    // Update vertical position always, but lock horizontal when over sidebar
+    if (overSidebar) {
+      // Snap X to leftmost visible board edge (container scrollLeft), update Y
+      const container = document.getElementById('corkboard-container');
+      const scrollLeft = container?.scrollLeft ?? 0;
+      updateNotePosition(note.id, { x: scrollLeft, y: clampedY });
+    } else {
+      // Normal update both
+      updateNotePosition(note.id, { x: clampedX, y: clampedY });
+    }
   };
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: PointerEvent) => {
     if (!dragState.current.dragging) return;
     dragState.current.dragging = false;
     window.removeEventListener('pointermove', handlePointerMove);
-    window.removeEventListener('pointerup', handlePointerUp);
-    handleInternalDragEnd();
+    window.removeEventListener('pointerup', handlePointerUp as any);
+    // Drop handling: cross-folder
+    if (isOverSidebar && onFolderDrop) {
+      onFolderDrop(note.id, e.clientX, e.clientY);
+    } else {
+      handleInternalDragEnd();
+    }
   };
 
   return (
     <div
-      className="note-draggable"
+      className="note-draggable absolute"
       onClick={() => removeHighlightNote(note.id)}
       onPointerDown={handlePointerDown}
       onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => e.stopPropagation()}
       style={{
-        position: 'absolute',
         top: note.position.y,
         left: note.position.x,
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
@@ -271,6 +299,7 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
         transform: `rotate(${rotation}deg) scale(${isHighlighted ? 1.1 : 1})`,
         transformOrigin: 'center center',
         zIndex: (isDragging || isHighlighted) ? 9999 : note.zIndex,
+        opacity: isOverSidebar ? 0.5 : 1,
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
     >

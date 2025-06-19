@@ -254,6 +254,25 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
                   updateNotePosition(note.id, newPosition);
                 }
               }}
+              onFolderDrop={async (noteId, clientX, clientY) => {
+                // Determine folder under pointer
+                const sideEl = document.getElementById('sidebar');
+                if (!sideEl || !currentUser) return;
+                const rect = sideEl.getBoundingClientRect();
+                // Find folder ID at point
+                const el = document.elementFromPoint(clientX, clientY) as HTMLElement;
+                const newFolderId = el?.closest('[data-folder-id]')?.getAttribute('data-folder-id');
+                if (newFolderId && newFolderId !== selectedFolderId) {
+                  // Move note to new folder
+                  setTransitionNotes(folderNotes.filter(n => n.id !== noteId));
+                  setIsMovingFolder(true);
+                  await moveNoteToFolder(noteId, newFolderId, undefined);
+                  await loadNotes(currentUser.uid, newFolderId, true);
+                  addHighlightNote(noteId);
+                  setSelectedFolder(newFolderId);
+                  setIsMovingFolder(false);
+                }
+              }}
               onNewNoteHandled={onNewNoteHandled}
             />
           ))}
