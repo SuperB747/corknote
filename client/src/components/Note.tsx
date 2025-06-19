@@ -246,9 +246,15 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
     const dy = e.clientY - dragState.current.startY;
     const rawX = dragState.current.origX + dx;
     const rawY = dragState.current.origY + dy;
-    // Clamp within board bounds
-    const clampedX = Math.max(0, Math.min(rawX, dragConstraints?.current?.clientWidth ?? rawX));
-    const clampedY = Math.max(0, Math.min(rawY, dragConstraints?.current?.clientHeight ?? rawY));
+    // Compute note dimensions
+    const noteWidthPx = isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width;
+    const noteHeightPx = isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height;
+    // Get board (canvas) dimensions
+    const boardWidth = dragConstraints?.current?.clientWidth ?? rawX + noteWidthPx;
+    const boardHeight = dragConstraints?.current?.clientHeight ?? rawY + noteHeightPx;
+    // Clamp within board bounds so note stays fully visible
+    const clampedX = Math.max(0, Math.min(rawX, boardWidth - noteWidthPx));
+    const clampedY = Math.max(0, Math.min(rawY, boardHeight - noteHeightPx));
     // Detect over sidebar
     const sideEl = document.getElementById('sidebar');
     let overSidebar = false;
@@ -259,12 +265,14 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
       }
     }
     setIsOverSidebar(overSidebar);
-    // Update vertical position always, but lock horizontal when over sidebar
+    // Update position: clamp X/Y so note stays within board; allow free move over sidebar with clamp
     if (overSidebar) {
-      // Snap X to leftmost visible board edge (container scrollLeft), update Y
+      // When over sidebar, snap X to left boundary (or nearest valid), update Y
       const container = document.getElementById('corkboard-container');
       const scrollLeft = container?.scrollLeft ?? 0;
-      updateNotePosition(note.id, { x: scrollLeft, y: clampedY });
+      // Ensure X snapped within bounds
+      const snapX = Math.max(0, Math.min(scrollLeft, boardWidth - noteWidthPx));
+      updateNotePosition(note.id, { x: snapX, y: clampedY });
     } else {
       // Normal update both
       updateNotePosition(note.id, { x: clampedX, y: clampedY });
