@@ -10,7 +10,7 @@ import { getNotes } from '../services/noteService';
 
 const Sidebar: React.FC = () => {
   const { currentUser } = useAuth();
-  const { folders, selectedFolderId, setSelectedFolder, createFolder, updateFolder, deleteFolder, reorderFolders, isDragging } = useNoteStore();
+  const { folders, selectedFolderId, setSelectedFolder, unsavedChanges, createFolder, updateFolder, deleteFolder, reorderFolders, isDragging } = useNoteStore();
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [isEditingFolder, setIsEditingFolder] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
@@ -65,8 +65,8 @@ const Sidebar: React.FC = () => {
 
   // Handler to auto-save layout changes before selecting a new folder
   const handleSelectFolder = async (folderId: string) => {
-    // Simulate Save Layout button click if available
-    if (typeof (window as any).saveLayout === 'function') {
+    // Auto-save layout only if there are unsaved changes
+    if (unsavedChanges && typeof (window as any).saveLayout === 'function') {
       await (window as any).saveLayout();
     }
     setSelectedFolder(folderId);

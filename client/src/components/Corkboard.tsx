@@ -194,7 +194,10 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
         className="absolute inset-0 overflow-auto overscroll-none w-full h-full scrollbar-container cursor-grab"
       >
         {/* Canvas area: adjustable via BOARD_WIDTH and BOARD_HEIGHT constants above */}
-        <div ref={canvasRef} className="relative overflow-hidden" style={{ width: BOARD_WIDTH, height: BOARD_HEIGHT }}>
+        <div
+          ref={canvasRef}
+          className="relative overflow-hidden w-full h-full min-w-[2304px] min-h-[1440px]"
+        >
           {/* Corkboard background */}
           <div className="absolute inset-0 bg-cork bg-repeat"></div>
           <div className="absolute inset-0 bg-cork-overlay"></div>
@@ -208,13 +211,13 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
               note={note}
               rotation={ocdEnabled ? 0 : note.rotation}
               onDragEnd={async (event, info) => {
-                // Clamp and update note position within board bounds
+                // Use offset to compute new position relative to previous position
                 const rawX = note.position.x + info.offset.x;
                 const rawY = note.position.y + info.offset.y;
+                // Clamp within board bounds
                 const clampedX = Math.max(0, Math.min(rawX, BOARD_WIDTH - NOTE_WIDTH));
                 const clampedY = Math.max(0, Math.min(rawY, BOARD_HEIGHT - NOTE_HEIGHT));
                 const newPosition = { x: clampedX, y: clampedY };
-                await (async () => newPosition)();
                 // Check for folder drop
                 let droppedOnFolder = false;
                 const sideEl = document.getElementById('sidebar');

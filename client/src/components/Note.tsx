@@ -109,7 +109,6 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
   const contentRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
   const dynamicShadow = '0 4px 8px rgba(0,0,0,0.6)';
-
   // calculate checklist completion percentage
   const checklistPercent = useMemo<number|null>(() => {
     const div = document.createElement('div');
@@ -219,89 +218,61 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
     setShowDeleteConfirm(true);
   };
 
-  const handleInternalDragEnd = (event: any, info: any) => {
+  const handleInternalDragEnd = () => {
+    // Called after manual drag completes
     setIsDragging(false);
     setDragging(false);
     setDisableHover(true);
     setIsOverSidebar(false);
-    onDragEnd?.(event, info);
+    // Keep pin handling unchanged
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
     setPinKey((k: number) => k + 1);
   };
 
+  // Manual drag state
+  const dragState = useRef({ dragging: false, startX: 0, startY: 0, origX: 0, origY: 0 });
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isEditing) return;
+    e.preventDefault();
+    dragState.current = { dragging: true, startX: e.clientX, startY: e.clientY, origX: note.position.x, origY: note.position.y };
+    setIsDragging(true);
+    setDragging(true);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
+  const handlePointerMove = (e: PointerEvent) => {
+    if (!dragState.current.dragging) return;
+    const dx = e.clientX - dragState.current.startX;
+    const dy = e.clientY - dragState.current.startY;
+    updateNotePosition(note.id, { x: dragState.current.origX + dx, y: dragState.current.origY + dy });
+  };
+  const handlePointerUp = () => {
+    if (!dragState.current.dragging) return;
+    dragState.current.dragging = false;
+    window.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('pointerup', handlePointerUp);
+    handleInternalDragEnd();
+  };
+
   return (
-    <motion.div
-      onTap={() => removeHighlightNote(note.id)}
-      initial={false}
-      className="note-draggable absolute rounded-none overflow-hidden"
-      onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => { e.stopPropagation(); }}
-      onPointerDown={() => {
-        setDisableHover(true);
-        setIsHovered(false);
-      }}
-      onPointerEnter={() => {
-        if (disableHover) setDisableHover(false);
-      }}
-      onHoverStart={() => {
-        if (isHighlighted) removeHighlightNote(note.id);
-        if (isEditing || disableHover || isDragging) return;
-        setIsHovered(true);
-      }}
-      onPointerLeave={() => {
-        setIsHovered(false);
-        setTextSelecting(false);
-      }}
-      whileHover={disableHover || isEditing || isDragging ? undefined : { scale: 1.1, zIndex: 10000, transition: { duration: 0.1, ease: 'easeInOut' } }}
-      whileDrag={isOverSidebar
-        ? { scale: 0.8, opacity: 0.3 }
-        : (disableHover || isDragging)
-          ? { scale: 1, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }
-          : { scale: 1.1, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
+    <div
+      className="note-draggable"
+      onClick={() => removeHighlightNote(note.id)}
+      onPointerDown={handlePointerDown}
+      onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => e.stopPropagation()}
       style={{
-        pointerEvents: isOverSidebar ? 'none' : 'auto',
-        transformOrigin: 'center center',
-        zIndex: (isDragging || isHighlighted || isHovered) ? 9999 : note.zIndex,
-        backgroundColor: color,
+        position: 'absolute',
+        top: note.position.y,
+        left: note.position.x,
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
-        boxShadow: isHighlighted
-          ? `${dynamicShadow}, inset 0 0 0 ${highlightWidth}px ${hexToRgba(highlightColor, highlightOpacity)}`
-          : dynamicShadow,
+        backgroundColor: color,
+        boxShadow: isHighlighted ? `${dynamicShadow}, inset 0 0 0 ${highlightWidth}px ${hexToRgba(highlightColor, highlightOpacity)}` : dynamicShadow,
+        transform: `rotate(${rotation}deg) scale(${isHighlighted ? 1.1 : 1})`,
+        transformOrigin: 'center center',
+        zIndex: (isDragging || isHighlighted) ? 9999 : note.zIndex,
+        cursor: isDragging ? 'grabbing' : 'grab',
       }}
-      animate={{
-        x: note.position.x,
-        y: note.position.y,
-        rotate: rotation,
-        scale: isHighlighted ? [0.8, 1] : 1,
-      }}
-      transition={{ default: { duration: 0 }, scale: isHighlighted ? { duration: 0.15, repeat: 5, repeatType: 'reverse', ease: 'easeInOut' } : { duration: 0.1, ease: 'easeInOut' } }}
-      drag={!isEditing && !textSelecting}
-      dragConstraints={dragConstraints}
-      dragElastic={0}
-      dragMomentum={false}
-      onDragStart={(e: any, info: any) => {
-        setIsDragging(true);
-        setDragging(true);
-        setDisableHover(true);
-        setIsHovered(false);
-        setIsOverSidebar(false);
-        updateNotePosition(note.id, note.position);
-      }}
-      onDrag={(e: any, info: any) => {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-          const rect = sidebar.getBoundingClientRect();
-          const over =
-            info.point.x >= rect.left &&
-            info.point.x <= rect.right &&
-            info.point.y >= rect.top &&
-            info.point.y <= rect.bottom;
-          if (over !== isOverSidebar) {
-          setIsOverSidebar(over);
-        }
-        }
-      }}
-      onDragEnd={handleInternalDragEnd}
     >
       {!isDragging && (
         <motion.div
@@ -464,7 +435,7 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
           <span className="text-gray-800 text-4xl font-bold opacity-30">{checklistPercent}%</span>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
 
