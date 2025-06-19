@@ -87,8 +87,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
       {/* Settings panel */}
       {isSettingsOpen && panelPos && ReactDOM.createPortal(
         <div
-          className="w-64 bg-white rounded-lg shadow-lg p-4 z-50"
-          style={{ position: 'fixed', top: panelPos.top, left: panelPos.left }}
+          className="w-64 bg-white rounded-lg shadow-lg p-4"
+          style={{ position: 'fixed', top: panelPos.top, left: panelPos.left, zIndex: 10000 }}
         >
           <h3 className="text-lg font-semibold mb-4">User Settings</h3>
           <button
