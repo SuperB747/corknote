@@ -84,8 +84,8 @@ interface NoteProps {
 
 function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, onNewNoteHandled, dragConstraints, onFolderDrop,
   highlightColor = '#8B0000',
-  highlightWidth = 4,
-  highlightOpacity = 1,
+  highlightWidth = 2,
+  highlightOpacity = 0.5,
 }: NoteProps): React.ReactElement {
   const { updateNote, deleteNote, updateNotePosition, updateNoteSize, updateNoteRotation } = useNoteStore();
   const setDragging = useNoteStore(state => state.setDragging);
@@ -230,11 +230,11 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
   };
 
   // Manual drag state
-  const dragState = useRef({ dragging: false, startX: 0, startY: 0, origX: 0, origY: 0 });
+  const dragState = useRef({ dragging: false, startX: 0, startY: 0, origX: 0, origY: 0, overSidebar: false });
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isEditing) return;
     e.preventDefault();
-    dragState.current = { dragging: true, startX: e.clientX, startY: e.clientY, origX: note.position.x, origY: note.position.y };
+    dragState.current = { dragging: true, startX: e.clientX, startY: e.clientY, origX: note.position.x, origY: note.position.y, overSidebar: false };
     setIsDragging(true);
     setDragging(true);
     window.addEventListener('pointermove', handlePointerMove);
@@ -265,6 +265,7 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
       }
     }
     setIsOverSidebar(overSidebar);
+    dragState.current.overSidebar = overSidebar;
     // Update position: clamp X/Y so note stays within board; allow free move over sidebar with clamp
     if (overSidebar) {
       // When over sidebar, snap X to left boundary (or nearest valid), update Y
@@ -284,7 +285,10 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
     window.removeEventListener('pointermove', handlePointerMove);
     window.removeEventListener('pointerup', handlePointerUp as any);
     // Drop handling: cross-folder
-    if (isOverSidebar && onFolderDrop) {
+    const overSidebar = dragState.current.overSidebar;
+    dragState.current.overSidebar = false;
+    if (overSidebar && onFolderDrop) {
+      handleInternalDragEnd();
       onFolderDrop(note.id, e.clientX, e.clientY);
     } else {
       handleInternalDragEnd();
