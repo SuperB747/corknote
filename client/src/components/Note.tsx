@@ -97,8 +97,6 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
   const [content, setContent] = useState(note.content);
   const [color, setColor] = useState(note.color || '#fff7c0');
   const [isDragging, setIsDragging] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [disableHover, setDisableHover] = useState(false);
   const [textSelecting, setTextSelecting] = useState(false);
   const [isOverSidebar, setIsOverSidebar] = useState(false);
   
@@ -131,13 +129,6 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
   useEffect(() => {
     if (isEditing) {
       updateNotePosition(note.id, note.position);
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
-    if (isEditing) {
-      setIsHovered(false);
-      setDisableHover(true);
     }
   }, [isEditing]);
 
@@ -223,7 +214,6 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
   const handleInternalDragEnd = () => {
     setIsDragging(false);
     setDragging(false);
-    setDisableHover(true);
     setIsOverSidebar(false);
     setPinColor(pinColors[Math.floor(Math.random() * pinColors.length)]);
     setPinKey((k: number) => k + 1);
@@ -307,7 +297,10 @@ function NoteComponent({ note, rotation = 0, initialEditing = false, onDragEnd, 
         width: isEditing ? EDIT_MODE_WIDTH : SIZE_OPTIONS[selectedSize].width,
         height: isEditing ? EDIT_MODE_HEIGHT : SIZE_OPTIONS[selectedSize].height,
         backgroundColor: color,
-        boxShadow: isHighlighted ? `${dynamicShadow}, inset 0 0 0 ${highlightWidth}px ${hexToRgba(highlightColor, highlightOpacity)}` : dynamicShadow,
+        boxShadow: isHighlighted
+          ? `${dynamicShadow}, inset 0 0 0 ${highlightWidth}px ${hexToRgba(highlightColor, highlightOpacity)}`
+          : dynamicShadow,
+        // Rotate and scale; apply GPU layer hints only while dragging
         transform: `rotate(${rotation}deg) scale(${isHighlighted ? 1.1 : 1})`,
         transformOrigin: 'center center',
         zIndex: (isDragging || isHighlighted) ? 9999 : note.zIndex,
