@@ -71,6 +71,15 @@ const Corkboard: React.FC<CorkboardProps> = ({ newNoteId, onNewNoteHandled }) =>
     };
   }, []);
 
+  // Reset scroll position to top-left when folder changes
+  useEffect(() => {
+    const el = containerRef.current;
+    if (el) {
+      el.scrollLeft = 0;
+      el.scrollTop = 0;
+    }
+  }, [selectedFolderId]);
+
   // Layout save status
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
